@@ -41,7 +41,7 @@
 #include "mvis/mprogram.hpp"
 #include "mvis/msgbox.hpp"
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
 
 /*---------------------------- Global Variables ---------------------------*/
 

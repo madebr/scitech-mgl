@@ -87,7 +87,7 @@ extern  char    *nextchar;
 
 /*------------------------- Function Prototypes --------------------------*/
 
-int getcmdopt(int argc,char **argv,char *format,char **argument);
+int getcmdopt(int argc,char **argv,const char *format,char **argument);
 int getcmdargs(int argc,char *argv[],int num_opt,Option optarr[],
             int (*do_param)(char *param,int num));
 void print_desc(int num_opt,Option optarr[]);

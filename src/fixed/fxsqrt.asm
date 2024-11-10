@@ -39,17 +39,15 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fxsqrt                  ; Set up memory model
 
-begdataseg  fxsqrt
+section .data
 
         cextern FXsqrt_table,ULONG
 
-enddataseg  fxsqrt
-
-begcodeseg  fxsqrt
+section .text
 
 ;----------------------------------------------------------------------------
 ; FXFixed F386_sqrt(FXFixed f);
@@ -72,7 +70,7 @@ cprocstart  F386_sqrt
 ; first 1 bit in the number).
 
         or      ebx,ebx
-        jle     @@Invalid       ; Taking sqrt of 0 or -ve number
+        jle     .Invalid        ; Taking sqrt of 0 or -ve number
 
 ; Search for the index of the first 1 bit in the number (start of
 ; the mantissa. Note that we are only working with positive numbers
@@ -95,11 +93,11 @@ cprocstart  F386_sqrt
         mov     dx,bx           ; EDX := interpolant
         shr     ebx,14          ; ebx := top 7 bits of mantissa + implied 1
         test    eax,1           ; Is the exponent odd?
-        jz      @@EvenExp       ; Yes, dont modify
+        jz      .EvenExp        ; Yes, dont modify
         and     ebx,03FCh       ; Index into second half of table
-        jmp     @@DoLookup
+        jmp     .DoLookup
 
-@@EvenExp:
+.EvenExp:
         and     ebx,01FCh       ; Index into second half of table
 
 ; Divide the exponent by two (square root it) while preserving the
@@ -109,7 +107,7 @@ cprocstart  F386_sqrt
 ; indicated by the exponent. A positive exponent means shift left, negative
 ; means shift right.
 
-@@DoLookup:
+.DoLookup:
         sar     eax,1           ; Divide exponent by 2
         sub     eax,7           ; Adjust to 24 bits of precision in table
         mov     ecx,eax         ; ECX := exponent of final result
@@ -117,31 +115,27 @@ cprocstart  F386_sqrt
         mov     ebx,[FXsqrt_table+ebx]  ; EBX := FXsqrt_table[index]
         sub     eax,ebx         ; EAX := difference
         or      ecx,ecx         ; Check sign of exponent
-        jl      @@Neg           ; Exponent is negative
+        jl      .Neg            ; Exponent is negative
         shl     eax,cl          ; Shift the result to correct position
         shl     ebx,cl
-        jmp     @@Interpolate
-@@Neg:  neg     ecx             ; Negative exponent shift right
+        jmp     .Interpolate
+.Neg:   neg     ecx             ; Negative exponent shift right
         shr     eax,cl          ; Shift the result to correct position
         shr     ebx,cl
 
 ; Add in the interpolated difference
 
-@@Interpolate:
+.Interpolate:
         imul    edx
         shrd    eax,edx,16      ; EAX := diff * interpolant
         adc     eax,ebx         ; Add in to result
 
-@@Exit:
+.Exit:
         pop     ebx             ; Restore EBX
         ret
 
-@@Invalid:
+.Invalid:
         xor     eax,eax         ; Invalid - return 0
-        jmp     @@Exit
+        jmp     .Exit
 
 cprocend
-
-endcodeseg  fxsqrt
-
-        END                     ; End of module

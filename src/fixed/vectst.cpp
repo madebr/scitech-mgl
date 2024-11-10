@@ -41,9 +41,12 @@
 #include "fx/vec4d.h"
 #include "fx/color.h"
 #include "ztimer.h"
-#include <iostream.h>
-#include <dos.h>
+#include <iostream>
+//#include <dos.h>
 #include <stdlib.h>
+
+using std::cout;
+using std::endl;
 
 #ifdef  DOUBLE
 #define MAXITER 500
@@ -277,7 +280,7 @@ void test_operations(void)
 #define time_member(member,type)                                        \
     LZTimerOn();                                                        \
     for (i = 0; i < MAXITER; i++)                                       \
-        a1Vec[i].##member##();                                              \
+        a1Vec[i].member();                                             \
     LZTimerOff();                                                       \
     cout << "Time for " << MAXITER << " " << #type << " ";\
     cout << #member << "'s:\t" << LZTimerCount() << endl;
@@ -407,11 +410,12 @@ void time_operations(void)
 
 }
 
-void main(void)
+int main(void)
 {
     ZTimerInit();
     test_operations();
     srand(100);
     time_operations();
     cout << endl;
+    return 0;
 }

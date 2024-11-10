@@ -38,8 +38,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <iostream.h>
+#include <iostream>
 #include "tcl/hashtab.hpp"
+
+using std::cout;
+using std::endl;
 
 #ifdef __UNIX__
 
@@ -53,11 +56,11 @@ unsigned long coreleft(void) {
 
 class entry : public TCHashTableNode {
 protected:
-	char	*name;			// Key of node
-	int		other_stuff;
+	const char	*name;			// Key of node
+	int			other_stuff;
 public:
 			// Constructor
-			entry(char *n,int stuff)
+			entry(const char *n,int stuff)
 			{
 				name = n;
 				other_stuff = stuff;
@@ -83,7 +86,7 @@ entry::~entry()
 
 uint entry::hash(void) const
 {
-	return TCL_hashAdd(name);
+	return TCL_hashAdd((uchar*)name);
 }
 
 ibool entry::operator == (const TCHashTableNode& key) const
@@ -96,7 +99,7 @@ void entry::printOn(ostream& o) const
 	o << name << " : " << other_stuff << endl;
 }
 
-void main(int argc,char *argv[])
+int main(int argc,char *argv[])
 {
 	entry	*p,*q,*r;
 
@@ -146,4 +149,5 @@ void main(int argc,char *argv[])
 	delete p;
 
 	cout << "\nMemory after deleting hash table: " << (unsigned long)coreleft() << endl;
+    return 0;
 }

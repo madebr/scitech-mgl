@@ -42,7 +42,7 @@
 
 /*----------------------------- Implementation ----------------------------*/
 
-MVView *MV_message(MVView *view,ulong what,ulong command,void *info)
+MVView *MV_message(MVView *view,ulong what,ulong command,const void *info)
 /****************************************************************************
 *
 * Function:     MV_message
@@ -78,7 +78,7 @@ MVView *MV_message(MVView *view,ulong what,ulong command,void *info)
     return NULL;
 }
 
-void MV_postMessage(MVView *view,ulong what,ulong command,void *info)
+void MV_postMessage(MVView *view,ulong what,ulong command,const void *info)
 /****************************************************************************
 *
 * Function:     MV_postMessage

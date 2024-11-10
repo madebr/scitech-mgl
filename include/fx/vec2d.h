@@ -221,8 +221,10 @@ typedef FXPoint2d   FXVec2d;
 #ifdef  __cplusplus
 
 #ifndef __IOSTREAM_H
-#include <iostream.h>
+#include <iostream>
 #endif
+
+using std::ostream;
 
 #ifndef __TCL_TECHLIB_HPP
 #include "tcl/techlib.hpp"

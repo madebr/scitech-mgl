@@ -37,18 +37,16 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  _random                 ; Setup for MGL memory model
 
-begdataseg  _random
+section .data
 
 seedlo      dd  1               ; 64 bit random number seed value
 seedhi      dd  0
 
-enddataseg  _random
-
-begcodeseg  _random             ; Start of code segment
+section .text
 
 ;----------------------------------------------------------------------------
 ; void MGL_srand(unsigned seed)
@@ -57,13 +55,13 @@ begcodeseg  _random             ; Start of code segment
 ;----------------------------------------------------------------------------
 cprocstart  MGL_srand
 
-        ARG     seed:UINT
+        %arg    seed:UINT
 
         push    ebp
         mov     ebp,esp
         mov     eax,[seed]
-        mov     [DWORD seedlo],eax
-        mov     [DWORD seedhi],0
+        mov     dword [seedlo],eax
+        mov     dword [seedhi],0
         pop     ebp
         ret
 
@@ -109,7 +107,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_random
 
-        ARG     max:USHORT
+        %arg    max:USHORT
 
         push    ebp
         mov     ebp,esp
@@ -131,19 +129,15 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_randoml
 
-        ARG     max:ULONG
+        %arg    max:ULONG
 
         push    ebp
         mov     ebp,esp
         call    lrand
         xor     edx,edx
-        div     [ULONG max]
+        div     dword [max]
         mov     eax,edx
         pop     ebp
         ret
 
 cprocend
-
-endcodeseg  _random
-
-        END                     ; End of module

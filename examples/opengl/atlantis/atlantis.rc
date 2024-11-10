@@ -33,7 +33,7 @@
 ****************************************************************************/
 
 #define NO_ICON
-#include "snapgl/gl/glutdlg.rc"
+#include "snapgl/GL/glutdlg.rc"
 
 1 ICON "atlantis.ico"
 

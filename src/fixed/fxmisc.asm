@@ -43,11 +43,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fxmisc                  ; Set up memory model
 
-begcodeseg  fxmisc
+section .text
 
 ;----------------------------------------------------------------------------
 ; FXFixed F386_mul(FXFixed a,FXFixed b);
@@ -58,7 +58,7 @@ begcodeseg  fxmisc
 cprocstart  F386_mul
 
         mov     eax,[esp+4]     ; Access directly without stack frame
-        imul    [ULONG esp+8]
+        imul    dword [esp+8]
         add     eax,8000h       ; Round by adding 2^-17
         adc     edx,0           ; Whole part of result is in DX
         shrd    eax,edx,16      ; EAX := a * b
@@ -79,7 +79,7 @@ cprocstart  F386_div
         xor     eax,eax
         shrd    eax,edx,16      ; position so that result ends up
         sar     edx,16          ; in EAX
-        idiv    [ULONG esp+8]
+        idiv    dword [esp+8]
         ret
 
 cprocend
@@ -96,8 +96,8 @@ cprocend
 cprocstart  F386_muldiv
 
         mov     eax,[esp+4]     ; Access directly without stack frame
-        imul    [ULONG esp+8]   ; EDX:EAX := 64 bit dividend
-        idiv    [ULONG esp+12]  ; Divide the 64 bit dividend
+        imul    dword [esp+8]    ; EDX:EAX := 64 bit dividend
+        idiv    dword [esp+12]  ; Divide the 64 bit dividend
         ret
 
 cprocend
@@ -127,11 +127,7 @@ cprocstart  F386_oneOver
 
         xor     eax,eax
         mov     edx,1
-        idiv    [ULONG esp+4]
+        idiv    dword [esp+4]
         ret
 
 cprocend
-
-endcodeseg  fxmisc
-
-        END                     ; End of module

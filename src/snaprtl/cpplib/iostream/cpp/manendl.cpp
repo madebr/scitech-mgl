@@ -52,7 +52,7 @@
 #include "iost.h"
 #else
 #include "variety.h"
-#include <iomanip.h>
+#include <iomanip>
 #include <iostream.h>
 #endif
 

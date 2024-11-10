@@ -86,7 +86,7 @@
  #include <_comdef.h>
 #endif
 #ifndef _IOSTREAM_H_INCLUDED
- #include <iostream.h>
+ #include <iostream>
 #endif
 #if defined(_M_IX86)
   #pragma pack(__push,1);

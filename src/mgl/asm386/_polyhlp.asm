@@ -36,11 +36,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  _polyhlp                ; Setup for MGL hybrid 16/32 bit segment
 
-begcodeseg  _polyhlp
+section .text
 
 ;----------------------------------------------------------------------------
 ; int _MGL_computeSlope(fxpoint_t *v1,fxpoint_t *v2,fix32_t *slope)
@@ -56,7 +56,7 @@ begcodeseg  _polyhlp
 ;----------------------------------------------------------------------------
 cprocstart  _MGL_computeSlope
 
-        ARG     v1:DPTR, v2:DPTR, slope:DPTR
+        %arg    v1:DPTR, v2:DPTR, slope:DPTR
 
         push    ebp
         mov     ebp,esp
@@ -67,9 +67,9 @@ cprocstart  _MGL_computeSlope
         mov     ebx,[v1]
         mov     esi,[ecx+4]
         sub     esi,[ebx+4]     ; ESI := v2.y - v1.y
-        jle     @@InvalidEdge   ; Check for negative/0 edges
+        jle     .InvalidEdge    ; Check for negative/0 edges
         cmp     esi,10000h
-        jle     @@QuickSlope    ; Handle divide overflow
+        jle     .QuickSlope     ; Handle divide overflow
 
         mov     eax,[ecx]
         sub     eax,[ebx]       ; EAX := v2.x - v1.x
@@ -82,28 +82,24 @@ cprocstart  _MGL_computeSlope
         mov     [ebx],eax       ; Store the resulting slope
         mov     eax,1           ; Positive edge
 
-@@Exit:
+.Exit:
         pop     esi
         pop     ebx
         pop     ebp
         ret
 
-@@QuickSlope:
+.QuickSlope:
         mov     eax,[ecx]
         sub     eax,[ebx]       ; EAX := v2.x - v1.x
         mov     ebx,[slope]
         mov     [ebx],eax       ; Store the resulting slope
         mov     eax,1           ; Positive edge
-        jmp     @@Exit
+        jmp     .Exit
 
-@@InvalidEdge:
+.InvalidEdge:
         mov     eax,-1          ; Negative edge
-        jl      @@Exit
+        jl      .Exit
         xor     eax,eax         ; Zero height edge
-        jmp     @@Exit
+        jmp     .Exit
 
 cprocend
-
-endcodeseg  _polyhlp
-
-        END                     ; End of module

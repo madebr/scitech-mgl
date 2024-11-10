@@ -39,11 +39,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fllog                   ; Set up memory model
 
-begcodeseg  fllog
+section .text
 
 ;----------------------------------------------------------------------------
 ; real FXlog10(real f);
@@ -51,7 +51,7 @@ begcodeseg  fllog
 cprocstart  FXlog10
 
         fldlg2                  ; ST(0) := log10(2)
-        fld     [REAL esp+4]    ; ST(0) := f
+        fld     real [esp+4]    ; ST(0) := f
         fyl2x                   ; ST(0) := log10(f)
         ret
 
@@ -63,12 +63,8 @@ cprocend
 cprocstart  FXlog
 
         fldln2                  ; ST(0) := loge(2)
-        fld     [REAL esp+4]    ; ST(0) := f
+        fld     dword [esp+4]   ; ST(0) := f
         fyl2x                   ; ST(0) := loge(f)
         ret
 
 cprocend
-
-endcodeseg  fllog
-
-        END                     ; End of module

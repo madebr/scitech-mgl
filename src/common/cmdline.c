@@ -106,7 +106,7 @@ can be made to be a valid form of the above command line.
 int getcmdopt(
     int argc,
     char **argv,
-    char *format,
+    const char *format,
     char **argument)
 {
     char    ch;

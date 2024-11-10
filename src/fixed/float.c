@@ -44,7 +44,7 @@
 
 // Numeric constants used by assembler routines
 
-real FXpi_180 = M_PI / 180.0;
+const real FXpi_180 = M_PI / 180.0;
 
 #else
 // Just to prevent linker warnings about no public symbols

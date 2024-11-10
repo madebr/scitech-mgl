@@ -387,7 +387,7 @@ void DemoArea::handleEvent(MVEvent& event,phaseType)
         }
 }
 
-static int gprintf(MGLDevCtx& dc,char *fmt, ... )
+static int gprintf(MGLDevCtx& dc,const char *fmt, ... )
 /****************************************************************************
 *
 * Function:     gprintf
@@ -1089,7 +1089,7 @@ void DemoArea::animationDemo()
     else setInfoText(animText2);
 }
 
-void DemoArea::setDemoTitle(char *title)
+void DemoArea::setDemoTitle(const char *title)
 /****************************************************************************
 *
 * Function:     DemoArea::setDemoTitle
@@ -1106,7 +1106,7 @@ void DemoArea::setDemoTitle(char *title)
     getEvent(e,evRepaint);
 }
 
-void DemoArea::setInfoText(char *text)
+void DemoArea::setInfoText(const char *text)
 /****************************************************************************
 *
 * Function:     DemoArea::setInfoText

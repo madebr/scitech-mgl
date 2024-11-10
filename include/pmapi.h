@@ -739,6 +739,7 @@ HEADER:
 pmapi.h
 ****************************************************************************/
 typedef void        *PM_MODULE;
+typedef void        *PM_WNDPROC;
 #elif   defined(__WINDOWS__)
 #ifdef  DECLARE_HANDLE
 typedef HWND        PM_HWND;    /* Real window handle                   */

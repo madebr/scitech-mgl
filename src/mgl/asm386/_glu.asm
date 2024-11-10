@@ -36,8 +36,8 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
-
+%include "scitech.mac"           ; Memory model macros
+;;
 BEGIN_IMPORTS_DEF   _GA_gluFuncs
 DECLARE_STDCALL gluBeginCurve,4
 DECLARE_STDCALL gluBeginPolygon,4
@@ -91,5 +91,3 @@ DECLARE_STDCALL gluTessProperty,16
 DECLARE_STDCALL gluTessVertex,12
 DECLARE_STDCALL gluUnProject,48
 END_IMPORTS_DEF
-
-        END                     ; End of module

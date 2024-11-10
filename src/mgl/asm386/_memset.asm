@@ -35,11 +35,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  _memset
 
-begcodeseg  _memset
+section .text
 
 ;----------------------------------------------------------------------------
 ; void MGL_memset(void *p,int c,uint n)
@@ -49,7 +49,7 @@ begcodeseg  _memset
 ;----------------------------------------------------------------------------
 cprocstart  MGL_memset
 
-        ARG     p:DPTR, c:UINT, n:UINT
+        %arg    p:DPTR, c:UINT, n:UINT
 
         enter_c
 
@@ -62,15 +62,15 @@ cprocstart  MGL_memset
         mov     ax,bx           ; EAX := value to store
         cld
 
-@@ForceAlignment:
+.ForceAlignment:
         test    edi,3
-        jz      @@Aligned
+        jz      .Aligned
         mov     [edi],al
         inc     edi
         dec     ecx
-        jnz     @@ForceAlignment
+        jnz     .ForceAlignment
 
-@@Aligned:
+.Aligned:
         push    ecx
         shr     ecx,2
     rep stosd                   ; Store all middle WORD's fast!
@@ -78,7 +78,7 @@ cprocstart  MGL_memset
         and     ecx,3
     rep stosb                   ; Store the last bytes if any
 
-@@Done: leave_c
+.Done:  leave_c
         ret
 
 cprocend
@@ -91,30 +91,30 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_memsetw
 
-        ARG     p:DPTR, c:UINT, n:UINT
+        %arg    p:DPTR, c:UINT, n:UINT
 
         enter_c
 
         mov     edi,[p]         ; EDI -> memory block
         mov     ecx,[n]
-        mov     ax,[WORD c]
+        mov     ax,word [c]
         mov     ebx,eax
         shl     eax,16
         mov     ax,bx           ; EAX := value to store
         cld
 
         test    edi,1
-        jz      @@Aligned
-        jcxz    @@Done          ; Exit if count of 0
+        jz      .Aligned
+        jcxz    .Done           ; Exit if count of 0
         stosw                   ; Force dword alignment
         dec     ecx
-@@Aligned:
+.Aligned:
         shr     ecx,1
     rep stosd                   ; Store all middle DWORD's fast!
         adc     ecx,ecx
     rep stosw                   ; Store the last word if any
 
-@@Done: leave_c
+.Done:  leave_c
         ret
 
 cprocend
@@ -128,7 +128,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_memsetl
 
-        ARG     p:DPTR, c:ULONG, n:UINT
+        %arg    p:DPTR, c:ULONG, n:UINT
 
         enter_c
 
@@ -147,7 +147,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_memcpy
 
-        ARG     p:DPTR, s:DPTR, n:UINT
+        %arg    p:DPTR, s:DPTR, n:UINT
 
         enter_c
 
@@ -163,7 +163,7 @@ cprocstart  MGL_memcpy
         and     ecx,3
     rep movsb
 
-@@Done: leave_c
+.Done:  leave_c
         ret
 
 cprocend
@@ -173,7 +173,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_memcpyVIRTSRC
 
-        ARG     p:DPTR, s:DPTR, n:UINT
+        %arg    p:DPTR, s:DPTR, n:UINT
 
         enter_c
 
@@ -184,14 +184,14 @@ cprocstart  MGL_memcpyVIRTSRC
 
 ; Force DWORD alignment for transfers in a virtualised buffer
 
-@@ForceAlignment:
+.ForceAlignment:
         test    esi,3
-        jz      @@Start
+        jz      .Start
         movsb
         dec     ecx
-        jnz     @@ForceAlignment
+        jnz     .ForceAlignment
 
-@@Start:
+.Start:
         mov     eax,ecx
         shr     ecx,2
     rep movsd
@@ -199,7 +199,7 @@ cprocstart  MGL_memcpyVIRTSRC
         and     ecx,3
     rep movsb
 
-@@Done: leave_c
+.Done:  leave_c
         ret
 
 cprocend
@@ -209,7 +209,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_memcpyVIRTDST
 
-        ARG     p:DPTR, s:DPTR, n:UINT
+        %arg    p:DPTR, s:DPTR, n:UINT
 
         enter_c
 
@@ -220,14 +220,14 @@ cprocstart  MGL_memcpyVIRTDST
 
 ; Force DWORD alignment for transfers in a virtualised buffer
 
-@@ForceAlignment:
+.ForceAlignment:
         test    edi,3
-        jz      @@Start
+        jz      .Start
         movsb
         dec     ecx
-        jnz     @@ForceAlignment
+        jnz     .ForceAlignment
 
-@@Start:
+.Start:
         mov     eax,ecx
         shr     ecx,2
     rep movsd
@@ -235,11 +235,7 @@ cprocstart  MGL_memcpyVIRTDST
         and     ecx,3
     rep movsb
 
-@@Done: leave_c
+.Done:  leave_c
         ret
 
 cprocend
-
-endcodeseg      _memset
-
-        END                     ; End of module

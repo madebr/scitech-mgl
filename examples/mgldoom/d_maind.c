@@ -891,7 +891,7 @@ void D_DoomMain (void)
     if (M_CheckParm("-cdrom"))
     {
         printf(D_CDROM);
-        #if defined(__GNUC__)
+        #if !defined(_WIN32)
            mkdir("c:\\doomdata",0);
         #else
            mkdir("c:\\doomdata");

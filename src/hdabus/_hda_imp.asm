@@ -36,7 +36,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 BEGIN_IMPORTS_DEF   __HDA_exports
 SKIP_IMP    HDA_init,3                          ; Implemented in C code
@@ -49,6 +49,3 @@ DECLARE_IMP HDA_setStreamFormat,4
 DECLARE_IMP HDA_startStream,3
 DECLARE_IMP HDA_stopStream,1
 END_IMPORTS_DEF
-
-   END
-

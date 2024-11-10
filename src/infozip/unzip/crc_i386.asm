@@ -47,13 +47,13 @@
 ; Do NOT assemble this source if external crc32 routine from zlib gets used.
 ;
 
-include "scitech.mac"
+%include "scitech.mac"
 
 header      crc_i386
 
         cexternfunc get_crc_table,NEAR    ; ZCONST ulg near *get_crc_table(void);
 
-begcodeseg  crc_i386
+section .text
 
 ; These two (three) macros make up the loop body of the CRC32 cruncher.
 ; registers modified:
@@ -64,51 +64,51 @@ begcodeseg  crc_i386
 ; scratch registers:
 ;   ebx  : index into crc_table array
 ;          (requires upper three bytes = 0 when __686 is undefined)
-ifdef   USE_NASM
+%ifdef   USE_NASM
 %macro Do_CRC 0
                 movzx   ebx,al              ; tmp = c & 0xFF
                 shr     eax,8               ; c = (c >> 8)
                 xor     eax,[edi+ebx*4]     ;  ^ table[tmp]
 %endmacro
 %macro Do_CRC_byte 0
-                xor     al,[BYTE esi]       ; c ^= *buf
+                xor     al,byte [esi]       ; c ^= *buf
                 inc     esi                 ; buf++
                 Do_CRC                      ; c = (c >> 8) ^ table[c & 0xFF]
 %endmacro
 %macro Do_CRC_dword 0
-                xor     eax,[DWORD esi]     ; c ^= *(ulg *)buf
+                xor     eax,dword [esi]     ; c ^= *(ulg *)buf
                 add     esi,4               ; ((ulg *)buf)++
                 Do_CRC
                 Do_CRC
                 Do_CRC
                 Do_CRC
 %endmacro
-else
+%else
 MACRO Do_CRC
                 movzx   ebx,al              ; tmp = c & 0xFF
                 shr     eax,8               ; c = (c >> 8)
                 xor     eax,[edi+ebx*4]     ;  ^ table[tmp]
 ENDM
 MACRO Do_CRC_byte
-                xor     al,[BYTE esi]       ; c ^= *buf
+                xor     al,byte [esi]       ; c ^= *buf
                 inc     esi                 ; buf++
                 Do_CRC                      ; c = (c >> 8) ^ table[c & 0xFF]
 ENDM
 MACRO Do_CRC_dword
-                xor     eax,[DWORD esi]     ; c ^= *(ulg *)buf
+                xor     eax,dword [esi]     ; c ^= *(ulg *)buf
                 add     esi,4               ; ((ulg *)buf)++
                 Do_CRC
                 Do_CRC
                 Do_CRC
                 Do_CRC
 ENDM
-endif   ; !USE_NASM
+%endif   ; !USE_NASM
 
 ; ulg crc32(ulg crc, ZCONST uch *buf, extent len)
 
 cprocstart  crc32
 
-        ARG     crc:ULONG, buf:DPTR, len:UINT
+        %arg    crc:ULONG, buf:DPTR, len:UINT
 
         push    ebp
         mov     ebp,esp
@@ -121,7 +121,7 @@ cprocstart  crc32
         mov     esi,[buf]           ; 2nd arg: uch *buf
         sub     eax,eax             ;> if (!buf)
         test    esi,esi             ;>   return 0;
-        jz      @@fine              ;> else {
+        jz      .fine               ;> else {
 
         call    get_crc_table
         mov     edi,eax
@@ -130,36 +130,36 @@ cprocstart  crc32
         not     eax                 ;>   c = ~crc;
 
         test    ecx,ecx
-        jz      @@bail
-@@align_loop:
+        jz      .bail
+.align_loop:
         test    esi,3               ; align buf pointer on next
-        jz      @@aligned_now       ;  dword boundary
+        jz      .aligned_now       ;  dword boundary
         Do_CRC_byte
         dec     ecx
-        jnz     @@align_loop
-@@aligned_now:
+        jnz     .align_loop
+.aligned_now:
         mov     edx,ecx             ; save len in edx
         shr     ecx,3               ; ecx = len / 8
-        jz      @@No_Eights
+        jz      .No_Eights
 
-@@Next_Eight:
+.Next_Eight:
         Do_CRC_dword
         Do_CRC_dword
         dec     ecx
-        jnz     @@Next_Eight
-@@No_Eights:
+        jnz     .Next_Eight
+.No_Eights:
         mov     ecx,edx
         and     ecx,000000007H      ; ecx = len % 8
-        jz      @@bail              ;>   if (len)
+        jz      .bail               ;>   if (len)
 
-@@loop:                             ;>     do {
+.loop:                              ;>     do {
         Do_CRC_byte                 ;        c = CRC32(c, *buf++);
         dec     ecx                 ;>     } while (--len);
-        jnz     @@loop
+        jnz     .loop
 
-@@bail:                             ;> }
+.bail:                              ;> }
         not     eax                 ;> return ~c;
-@@fine:
+.fine:
         pop     ecx
         pop     edx
         pop     ebx
@@ -169,8 +169,4 @@ cprocstart  crc32
         ret
 
 cprocend
-
-endcodeseg  crc_i386
-
-            END
 

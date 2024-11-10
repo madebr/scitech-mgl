@@ -35,9 +35,12 @@
 *
 ****************************************************************************/
 
-#include <iostream.h>
+#include <iostream>
 #include "pmapi.h"
 #include "ztimer.h"
+
+using std::cout;
+using std::endl;
 
 /*-------------------------- Implementation -------------------------------*/
 

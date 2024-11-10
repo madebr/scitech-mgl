@@ -15,7 +15,7 @@
 
 #if defined(_WIN32)
 #include "glutwin32.h"
-#else
+#elif defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <GL/glx.h>

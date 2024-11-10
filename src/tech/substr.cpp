@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include <limits.h>
-#include <iomanip.h>
+#include <iomanip>
 #include "tcl/str.hpp"
 #include "tcl/techlib.hpp"
 

@@ -36,7 +36,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header      _pmdos              ; Set up memory model
 
@@ -44,19 +44,19 @@ header      _pmdos              ; Set up memory model
 ; that big, but for 32 bit protected mode code we can make them nice and
 ; large so that complex C functions can be used.
 
-ifdef flatmodel
+%ifdef flatmodel
 MOUSE_STACK EQU 4096
 TIMER_STACK EQU 4096
 KEY_STACK   EQU 1024
 INT10_STACK EQU 1024
 IRQ_STACK   EQU 1024
-else
+%else
 MOUSE_STACK EQU 1024
 TIMER_STACK EQU 512
 KEY_STACK   EQU 256
 INT10_STACK EQU 256
 IRQ_STACK   EQU 256
-endif
+%endif
 
 ; Macro to load DS and ES registers with correct value.
 
@@ -107,11 +107,11 @@ endif
         xchg    _sp,[ptr_%1]
 %endmacro
 
-begdataseg  _pmdos
+section .data
 
-ifdef flatmodel
+%ifdef flatmodel
     cextern _PM_savedDS,USHORT
-endif
+%endif
     cextern _PM_critHandler,CPTR
     cextern _PM_breakHandler,CPTR
     cextern _PM_timerHandler,CPTR
@@ -187,9 +187,7 @@ TempSeg     dw      0           ; Place to store stack segment
 
 cpublic _PM_pmdosDataEnd
 
-enddataseg  _pmdos
-
-begcodeseg  _pmdos              ; Start of code segment
+section .text                   ; Start of code segment
 
 cpublic _PM_pmdosCodeStart
 
@@ -219,11 +217,11 @@ cpublic _PM_pmdosCodeStart
 ;           DI  - Vertical mickey value
 ;
 ;----------------------------------------------------------------------------
-ifdef   DJGPP
+%ifdef   DJGPP
 cprocstart  _PM_mouseISR
-else
+%else
 cprocfar    _PM_mouseISR
-endif
+%endif
 
         push    ds              ; Save value of DS
         push    es
@@ -302,7 +300,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_chainPrevTimer
 
-ifdef   TNT
+%ifdef  TNT
         push    eax
         push    ebx
         push    ecx
@@ -316,7 +314,7 @@ ifdef   TNT
         pop     ebx
         pop     eax
         ret
-else
+%else
         SWAPSTK TmStack         ; Swap back to previous stack
         pushf                   ; Save state of interrupt flag
         pushf                   ; Push flags on stack to simulate interrupt
@@ -324,7 +322,7 @@ else
         popf                    ; Restore state of interrupt flag
         SWAPSTK TmStack         ; Swap back to C stack again
         ret
-endif
+%endif
 
 cprocend
 
@@ -396,7 +394,7 @@ cprocfar    _PM_rtcISR
 
 cprocend
 
-ifdef flatmodel
+%ifdef flatmodel
 ;----------------------------------------------------------------------------
 ; PM_irqISRTemplate - Hardware interrupt handler IRQ template
 ;----------------------------------------------------------------------------
@@ -415,12 +413,12 @@ ifdef flatmodel
 ;----------------------------------------------------------------------------
 cprocfar    _PM_irqISRTemplate
 
-@@ProtectedModeEntry:
+.ProtectedModeEntry:
         push    ebx
         mov     ebx,0                   ; Relocation adjustment factor
         jmp     __IRQEntry
 
-@@RealModeCallbackEntry:
+.RealModeCallbackEntry:
         push    ebx
         mov     ebx,0                   ; Relocation adjustment factor
         jmp     __IRQEntryFromRealMode
@@ -453,27 +451,27 @@ __IRQEntryFromRealMode:
         mov     [es:edi+2Ah],ax         ; Plug in return IP address
         mov     ax,[ds:esi+2]
         mov     [es:edi+2Ch],ax         ; Plug in return CS value
-        add     [WORD es:edi+2Eh],4     ; Remove return address from stack
+        add     word [es:edi+2Eh],4     ; Remove return address from stack
         pop     eax
 
 ; Entry point when called from within protected mode directly
 
 __IRQEntry:
-        cmp     [BYTE cs:ebx+_IRQ],7    ; Spurious IRQs occur only on IRQ 7
-        jne     @@ValidIRQ
+        cmp     byte [cs:ebx+_IRQ],7    ; Spurious IRQs occur only on IRQ 7
+        jne     .ValidIRQ
         push    eax
         mov     al,1011b                ; OCW3: read ISR
         out     20h,al                  ; (Intel Peripheral Components, 1991,
         in      al,20h                  ; p. 3-188)
         shl     al,1                    ; Set C = bit 7 (IRQ 7) of ISR register
         pop     eax
-        jc      @@ValidIRQ
+        jc      .ValidIRQ
         pop     ebx
         iret                            ; Return from interrupt
 
 ; Save all registers for duration of IRQ handler
 
-@@ValidIRQ:
+.ValidIRQ:
         push    ds                      ; Save value of DS
         push    es
         pushad                          ; Save _all_ extended registers
@@ -482,9 +480,9 @@ __IRQEntry:
 
 ; Check for mutual exclusion
 
-        cmp     [BYTE ebx+_Inside],1
-        je      @@Exit
-        mov     [BYTE ebx+_Inside],1
+        cmp     byte [ebx+_Inside],1
+        je      .Exit
+        mov     byte [ebx+_Inside],1
 
 ; Call the C interrupt handler function
 
@@ -494,35 +492,35 @@ __IRQEntry:
         mov     ss,[TempSeg]
         lea     esp,[ebx+_IRQStack]
         push    ebx
-        push    [DWORD ebx+_CContext]   ; Push interrupt handler context
-        call    [DWORD ebx+_CHandler]   ; Call user interrupt handler
+        push    dword [ebx+_CContext]   ; Push interrupt handler context
+        call    dword [ebx+_CHandler]   ; Call user interrupt handler
         pop     ebx
         pop     ebx
         mov     ss,[ebx+seg_IRQStack]   ; Restore previous stack
         mov     esp,[ebx+ptr_IRQStack]
         or      eax,eax
-        jz      @@ChainOldHandler       ; Chain if not handled for shared IRQ
+        jz      .ChainOldHandler        ; Chain if not handled for shared IRQ
 
-@@Exit: mov     al,20h                  ; Send EOI to PIC
-        cmp     [BYTE ebx+_IRQ],8       ; Clear PIC1 first if IRQ >= 8
-        jb      @@1
+.Exit:  mov     al,20h                  ; Send EOI to PIC
+        cmp     byte [ebx+_IRQ],8       ; Clear PIC1 first if IRQ >= 8
+        jb      .1
         out     0A0h,al
-@@1:    out     20h,al
-        mov     [BYTE ebx+_Inside],0
+.1:     out     20h,al
+        mov     byte [ebx+_Inside],0
         popad                           ; Restore all extended registers
         pop     es
         pop     ds
         pop     ebx
         iret                            ; Return from interrupt
 
-@@ChainOldHandler:
-        cmp     [DWORD ebx+_PrevIRQ],0
-        je      @@Exit
-        mov     [BYTE ebx+_Inside],0
-        mov     eax,[DWORD ebx+_PrevIRQ]
-        mov     ecx,[DWORD ebx+_PrevIRQ+4]
-        mov     [DWORD _PrevIRQ],eax
-        mov     [DWORD _PrevIRQ+4],ecx
+.ChainOldHandler:
+        cmp     dword [ebx+_PrevIRQ],0
+        je      .Exit
+        mov     byte [ebx+_Inside],0
+        mov     eax,dword [ebx+_PrevIRQ]
+        mov     ecx,dword [ebx+_PrevIRQ+4]
+        mov     dword [_PrevIRQ],eax
+        mov     dword [_PrevIRQ+4],ecx
 
         popad                           ; Restore all extended registers
         pop     es
@@ -537,7 +535,7 @@ __IRQEntry:
 
 cprocend
 cpublic _PM_irqISRTemplateEnd
-endif
+%endif
 
 ;----------------------------------------------------------------------------
 ; _PM_int2BHandler
@@ -575,16 +573,16 @@ cprocfar    _PM_keyISR
 
         LOAD_DS                 ; Load DS register
 
-        cmp     [BYTE KyInside],1   ; Check for mutual exclusion
-        je      @@Reissued
+        cmp     byte [KyInside],1   ; Check for mutual exclusion
+        je      .Reissued
 
-        mov     [BYTE KyInside],1
+        mov     byte [KyInside],1
         NEWSTK  KyStack         ; Switch to local stack
         call    [CPTR _PM_keyHandler]   ; Call C code
         RESTSTK KyStack         ; Restore previous stack
-        mov     [BYTE KyInside],0
+        mov     byte [KyInside],0
 
-@@Exit: popad                   ; Restore all extended registers
+.Exit:  popad                   ; Restore all extended registers
         pop     es
         pop     ds
         iret                    ; Return from interrupt
@@ -598,8 +596,8 @@ cprocfar    _PM_keyISR
 ; Note that for most DOS extenders, the real mode interrupt handler that we
 ; install takes care of this for us.
 
-@@Reissued:
-ifdef   TNT
+.Reissued:
+%ifdef  TNT
         push    eax
         push    ebx
         push    ecx
@@ -612,11 +610,11 @@ ifdef   TNT
         pop     ecx
         pop     ebx
         pop     eax
-else
+%else
         pushf
         call    far dword [_PM_prevKey]
-endif
-        jmp     @@Exit
+%endif
+        jmp     .Exit
 
 cprocend
 
@@ -628,7 +626,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_chainPrevKey
 
-ifdef   TNT
+%ifdef  TNT
         push    eax
         push    ebx
         push    ecx
@@ -642,7 +640,7 @@ ifdef   TNT
         pop     ebx
         pop     eax
         ret
-else
+%else
 
 ; YIKES! For some strange reason, when execution returns from the
 ; previous keyboard handler, interrupts are re-enabled!! Since we expect
@@ -657,7 +655,7 @@ else
         call    far dword [_PM_prevKey]
         SWAPSTK KyStack         ; Swap back to C stack again
         ret
-endif
+%endif
 
 cprocend
 
@@ -676,7 +674,7 @@ cprocfar    _PM_key15ISR
         push    es
         LOAD_DS
         cmp     ah,4Fh
-        jnz     @@NotOurs       ; Quit if not keyboard callout
+        jnz     .NotOurs        ; Quit if not keyboard callout
 
         pushad
         cld                     ; Clear direction flag
@@ -687,15 +685,15 @@ cprocfar    _PM_key15ISR
         _add    sp,2,4
         RESTSTK Ky15Stack       ; Restore previous stack
         test    ax,ax
-        jz      @@1
+        jz      .1
         stc                     ; Set carry to process as normal
-        jmp     @@2
-@@1:    clc                     ; Clear carry to ignore scan code
-@@2:    popad
-        jmp     @@Exit          ; We are done
+        jmp     .2
+.1:     clc                     ; Clear carry to ignore scan code
+.2:     popad
+        jmp     .Exit          ; We are done
 
-@@NotOurs:
-ifdef   TNT
+.NotOurs:
+%ifdef   TNT
         push    eax
         push    ebx
         push    ecx
@@ -708,17 +706,17 @@ ifdef   TNT
         pop     ecx
         pop     ebx
         pop     eax
-else
+%else
         pushf
         call    far dword [_PM_prevKey15]
-endif
-@@Exit: pop     es
+%endif
+.Exit:  pop     es
         pop     ds
-ifdef flatmodel
+%ifdef flatmodel
         retf    4
-else
+%else
         retf    2
-endif
+%endif
 
 cprocend
 
@@ -737,26 +735,26 @@ cprocfar    _PM_breakISR
         push    _bx
 
         LOAD_DS                 ; Load DS register
-ifdef flatmodel
+%ifdef flatmodel
         mov     ebx,[_PM_ctrlBPtr]
-else
+%else
         les     bx,[_PM_ctrlBPtr]
-endif
-        mov     [UINT _ES _bx],1
+%endif
+        mov     dword [_ES _bx],1
 
 ; Run alternate break handler code if installed
 
-        cmp     [CPTR _PM_breakHandler],0
-        je      @@Exit
+        cmp     dword [_PM_breakHandler],0
+        je      .Exit
 
         pushad
         mov     _ax,1
         push    _ax
-        call    [CPTR _PM_breakHandler] ; Call C code
+        call    dword [_PM_breakHandler] ; Call C code
         pop     _ax
         popad
 
-@@Exit: pop     _bx
+.Exit:  pop     _bx
         pop     es
         pop     ds
         iret                    ; Return from interrupt
@@ -770,23 +768,23 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_ctrlBreakHit
 
-        ARG     clearFlag:UINT
+        %arg    clearFlag:UINT
 
         enter_c
         pushf                   ; Save interrupt status
         push    es
-ifdef flatmodel
+%ifdef flatmodel
         mov     ebx,[_PM_ctrlBPtr]
-else
+%else
         les     bx,[_PM_ctrlBPtr]
-endif
+%endif
         cli                     ; No interrupts thanks!
         mov     _ax,[_ES _bx]
-        test    [BYTE clearFlag],1
-        jz      @@Done
-        mov     [UINT _ES _bx],0
+        test    byte [clearFlag],1
+        jz      .Done
+        mov     dword [_ES _bx],0
 
-@@Done: pop     es
+.Done:  pop     es
         popf                    ; Restore interrupt status
         leave_c
         ret
@@ -808,26 +806,26 @@ cprocfar    _PM_ctrlCISR
         push    _bx
 
         LOAD_DS                 ; Load DS register
-ifdef flatmodel
+%ifdef flatmodel
         mov     ebx,[_PM_ctrlCPtr]
-else
+%else
         les     bx,[_PM_ctrlCPtr]
-endif
-        mov     [UINT _ES _bx],1
+%endif
+        mov     dword [_ES _bx],1
 
 ; Run alternate break handler code if installed
 
-        cmp     [CPTR _PM_breakHandler],0
-        je      @@Exit
+        cmp     dword [_PM_breakHandler],0
+        je      .Exit
 
         pushad
         mov     _ax,0
         push    _ax
-        call    [CPTR _PM_breakHandler] ; Call C code
+        call    dword [_PM_breakHandler] ; Call C code
         pop     _ax
         popad
 
-@@Exit: pop     _bx
+.Exit:  pop     _bx
         pop     es
         pop     ds
         iret                    ; Return from interrupt
@@ -842,23 +840,23 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_ctrlCHit
 
-        ARG     clearFlag:UINT
+        %arg    clearFlag:UINT
 
         enter_c
         pushf                   ; Save interrupt status
         push    es
-ifdef flatmodel
+%ifdef flatmodel
         mov     ebx,[_PM_ctrlCPtr]
-else
+%else
         les     bx,[_PM_ctrlCPtr]
-endif
+%endif
         cli                     ; No interrupts thanks!
         mov     _ax,[_ES _bx]
-        test    [BYTE clearFlag],1
-        jz      @@Done
-        mov     [UINT _ES _bx],0
+        test    byte [clearFlag],1
+        jz      .Done
+        mov     dword [_ES _bx],0
 
-@@Done:
+.Done:
         pop     es
         popf                    ; Restore interrupt status
         leave_c
@@ -884,23 +882,23 @@ cprocfar    _PM_criticalISR
         cld                     ; Clear direction flag
 
         LOAD_DS                 ; Load DS register
-ifdef flatmodel
+%ifdef flatmodel
         mov     ebx,[_PM_critPtr]
-else
+%else
         les     bx,[_PM_critPtr]
-endif
+%endif
         mov     [_ES _bx],ax
         mov     [_ES _bx+2],di
 
 ; Run alternate critical handler code if installed
 
-        cmp     [CPTR _PM_critHandler],0
-        je      @@NoAltHandler
+        cmp     dword [_PM_critHandler],0
+        je      .NoAltHandler
 
         pushad
         push    _di
         push    _ax
-        call    [CPTR _PM_critHandler]  ; Call C code
+        call    dword [_PM_critHandler]  ; Call C code
         _add    sp,4,8
         popad
 
@@ -909,7 +907,7 @@ endif
         pop     ds
         iret                    ; Return from interrupt
 
-@@NoAltHandler:
+.NoAltHandler:
         mov     ax,3            ; Tell MSDOS to fail the operation
         pop     _bx
         pop     es
@@ -926,25 +924,25 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_criticalError
 
-        ARG     axVal:DPTR, diVal:DPTR, clearFlag:UINT
+        %arg    axVal:DPTR, diVal:DPTR, clearFlag:UINT
 
         enter_c
         pushf                   ; Save interrupt status
         push    es
-ifdef flatmodel
+%ifdef flatmodel
         mov     ebx,[_PM_critPtr]
-else
+%else
         les     bx,[_PM_critPtr]
-endif
+%endif
         cli                     ; No interrupts thanks!
         xor     _ax,_ax
         xor     _di,_di
         mov     ax,[_ES _bx]
         mov     di,[_ES _bx+2]
-        test    [BYTE clearFlag],1
-        jz      @@NoClear
-        mov     [ULONG _ES _bx],0
-@@NoClear:
+        test    byte [clearFlag],1
+        jz      .NoClear
+        mov     dword [_ES _bx],0
+.NoClear:
         _les    _bx,[axVal]
         mov     [_ES _bx],_ax
         _les    _bx,[diVal]
@@ -961,7 +959,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _PM_setMouseHandler
 
-        ARG     mouseMask:UINT
+        %arg    mouseMask:UINT
 
         enter_c
         push    es
@@ -979,7 +977,7 @@ cprocstart  _PM_setMouseHandler
 
 cprocend
 
-ifdef flatmodel
+%ifdef flatmodel
 
 ;----------------------------------------------------------------------------
 ; void PM_mousePMCB(void)
@@ -1007,7 +1005,7 @@ cprocfar    _PM_mousePMCB
         mov     [es:edi+2Ah],ax     ; Plug in return IP address
         mov     ax,[ds:esi+2]
         mov     [es:edi+2Ch],ax     ; Plug in return CS value
-        add     [WORD es:edi+2Eh],4 ; Remove return address from stack
+        add     word [es:edi+2Eh],4 ; Remove return address from stack
         iret                        ; Go back to real mode!
 
 cprocend
@@ -1036,7 +1034,7 @@ cprocfar        _PM_int10PMCB
         mov     [es:edi+2Ah],ax     ; Plug in return IP address
         mov     ax,[ds:esi+2]
         mov     [es:edi+2Ch],ax     ; Plug in return CS value
-        add     [WORD es:edi+2Eh],4 ; Remove return address from stack
+        add     word [es:edi+2Eh],4 ; Remove return address from stack
 
 ; Call the install int10 handler in protected mode. This function gets called
 ; with DS set to the current data selector, and ES:EDI pointing the the
@@ -1060,10 +1058,7 @@ cprocfar        _PM_int10PMCB
 
 cprocend
 
-endif
+%endif
 
 cpublic _PM_pmdosCodeEnd
 
-endcodeseg  _pmdos
-
-        END                     ; End of module

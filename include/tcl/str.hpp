@@ -63,11 +63,13 @@
 #define __TCL_STR_HPP
 
 #include "scitech.h"
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
 #include <limits.h>
 #undef   toupper
 #undef   tolower
+
+using std::ostream;
 
 /*------------------------ Compatability Definitions ----------------------*/
 

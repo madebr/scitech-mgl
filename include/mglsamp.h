@@ -87,7 +87,7 @@ extern  char    demoName[];
 int     waitEvent(void);
 ibool   checkEvent(void);
 color_t randomColor(void);
-int     gprintf(char *fmt, ... );
+int     gprintf(const char *fmt, ... );
 void    drawBorder(void);
 void    statusLine(char *msg);
 ibool   pause(void);

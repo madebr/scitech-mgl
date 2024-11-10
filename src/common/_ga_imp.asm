@@ -36,7 +36,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"           ; Memory model macros
 
 BEGIN_IMPORTS_DEF   __GA_exports
 SKIP_IMP    GA_status,0                     ; Implemented in C code
@@ -153,6 +153,3 @@ DECLARE_IMP GA_freeLibrary,1
 SKIP_IMP    GA_getPCIDeviceInfo,2           ; Implemented in C code
 DECLARE_IMP GA_getActiveDevice,0
 END_IMPORTS_DEF
-
-   END
-

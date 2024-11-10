@@ -38,23 +38,19 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  flsqrt                  ; Set up memory model
 
-begcodeseg  flsqrt
+section .text
 
 ;----------------------------------------------------------------------------
 ; real FXsqrt(real f);
 ;----------------------------------------------------------------------------
 cprocstart  FXsqrt
 
-        fld     [REAL esp+4]    ; ST(0) := f
+        fld     real [esp+4]    ; ST(0) := f
         fsqrt                   ; ST(0) := sqrt(f)
         ret
 
 cprocend
-
-endcodeseg  flsqrt
-
-        END                     ; End of module

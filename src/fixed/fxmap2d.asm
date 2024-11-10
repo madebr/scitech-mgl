@@ -39,12 +39,12 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
-include "fxmacs.mac"            ; Fixed point macros
+%include "scitech.mac"           ; Memory model macros
+%include "fxmacs.mac"            ; Fixed point macros
 
 header  fxmap2d                 ; Set up memory model
 
-begcodeseg  fxmap2d
+section .text
 
 ;----------------------------------------------------------------------------
 ; void F386_map2D(long *m,long *result,long *p,bool special);
@@ -55,22 +55,22 @@ begcodeseg  fxmap2d
 ;----------------------------------------------------------------------------
 cprocstart  F386_map2D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %arg    m:DPTR, result:DPTR, p:DPTR, special:BOOL
 
         enter_c
 
         mov     esi,[m]         ; ESI -> transform matrix
         mov     edi,[p]         ; EDI -> point to transform
-        test    [special],1
-        jnz     @@DoSpecial     ; We have a special case mapping!
+        test    byte [special],1
+        jnz     .DoSpecial     ; We have a special case mapping!
 
         mov     eax,[esi]       ; EAX := mat[0][0]
-        imul    [ULONG edi]
+        imul    dword [edi]
         mov     ecx,eax         ; EBX:ECX := p.x * mat[0][0]
         mov     ebx,edx
 
         mov     eax,[esi+4]     ; EAX := mat[0][1]
-        imul    [ULONG edi+4]
+        imul    dword [edi+4]
         add     eax,ecx         ; EDX:EAX := p.x * mat[0][0] + p.y * mat[0][1]
         adc     edx,ebx
         ROUNDIT
@@ -79,33 +79,33 @@ cprocstart  F386_map2D
         push    eax
 
         mov     eax,[esi+12]    ; EAX := mat[1][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[1][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[1][0]
         mov     ecx,eax         ; EBX:ECX := p.x * mat[1][0]
         mov     ebx,edx
 
         mov     eax,[esi+12+4]  ; EAX := mat[1][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[1][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[1][1]
         add     eax,ecx         ; EDX:EAX := p.x * mat[1][0] + p.y * mat[1][1]
         adc     edx,ebx
         ROUNDIT
         add     eax,[esi+12+8]  ; EAX := p.x * mat[1][0] + p.y * mat[1][1]
                                 ;        + mat[1][2] = result.y
         pop     ebx
-        jmp     @@StoreResult
+        jmp     .StoreResult
 
-@@DoSpecial:
+.DoSpecial:
         mov     eax,[esi]       ; EAX := mat[0][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[0][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[0][0]
         ROUNDIT                 ; EAX := rounded result
         mov     ebx,eax         ; EBX := p.x * mat[0][0]
         add     ebx,[esi+8]     ; EBX := p.x * mat[0][0] + mat[0][2] = result.x
 
         mov     eax,[esi+12+4]  ; EAX := mat[1][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[1][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[1][1]
         ROUNDIT                 ; EAX := rounded result
         add     eax,[esi+12+8]  ; EAX := p.y * mat[1][1] + mat[1][2] = result.y
 
-@@StoreResult:
+.StoreResult:
         mov     esi,[result]    ; esi -> resultant point
 
         mov     [esi],ebx       ; Store result.x
@@ -128,51 +128,51 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_mapVec2D
 
-        ARG     m:DPTR, result:DPTR, v:DPTR, special:BOOL
+        %arg     m:DPTR, result:DPTR, v:DPTR, special:BOOL
 
         enter_c
 
         mov     esi,[m]         ; esi -> transform matrix
         mov     edi,[v]         ; edi -> point to transform
-        test    [special],1
-        jnz     @@DoSpecial     ; We have a special case mapping!
+        test    byte [special],1
+        jnz     .DoSpecial      ; We have a special case mapping!
 
         mov     eax,[esi]       ; EAX := mat[0][0]
-        imul    [ULONG edi]
+        imul    dword [edi]
         mov     ecx,eax         ; EBX:ECX := p.x * mat[0][0]
         mov     ebx,edx
 
         mov     eax,[esi+4]     ; EAX := mat[0][1]
-        imul    [ULONG edi+4]
+        imul    dword [edi+4]
         add     eax,ecx         ; EDX:EAX := p.x * mat[0][0] + p.y * mat[0][1]
         adc     edx,ebx
         ROUNDIT
         push    eax
 
         mov     eax,[esi+12]    ; EAX := mat[1][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[1][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[1][0]
         mov     ecx,eax         ; EBX:ECX := p.x * mat[1][0]
         mov     ebx,edx
 
         mov     eax,[esi+12+4]  ; EAX := mat[1][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[1][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[1][1]
         add     eax,ecx         ; EDX:EAX := p.x * mat[1][0] + p.y * mat[1][1]
         adc     edx,ebx
         ROUNDIT
         pop     ebx
-        jmp     @@StoreResult
+        jmp     .StoreResult
 
-@@DoSpecial:
+.DoSpecial:
         mov     eax,[esi]       ; EAX := mat[0][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[0][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[0][0]
         ROUNDIT                 ; EAX := rounded result
         mov     ebx,eax         ; EBX := p.x * mat[0][0]
 
         mov     eax,[esi+12+4]  ; EAX := mat[1][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[1][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[1][1]
         ROUNDIT                 ; EAX := rounded result
 
-@@StoreResult:
+.StoreResult:
         mov     esi,[result]    ; esi -> resultant point
 
         mov     [esi],ebx       ; Store result.x
@@ -182,7 +182,3 @@ cprocstart  F386_mapVec2D
         ret
 
 cprocend
-
-endcodeseg  fxmap2d
-
-        END                     ; End of module

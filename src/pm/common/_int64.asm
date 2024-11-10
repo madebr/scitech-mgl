@@ -35,11 +35,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"
+%include "scitech.mac"
 
 header      _int64
 
-begcodeseg  _int64                  ; Start of code segment
+section .text                       ; Start of code segment
 
 a_low       EQU 04h                 ; Access a_low directly on stack
 a_high      EQU 08h                 ; Access a_high directly on stack
@@ -110,7 +110,7 @@ cprocstart  _PM_mul64
         mul     ecx                     ; EDX:EAX = a.high * b.low
         mov     ebx,eax
         mov     eax,[esp+a_low+4]
-        mul     [DWORD esp+b_high+4]    ; EDX:EAX = b.high * a.low
+        mul     dword [esp+b_high+4]    ; EDX:EAX = b.high * a.low
         add     ebx,eax
         mov     eax,[esp+a_low+4]
         mul     ecx                     ; EDX:EAX = a.low * b.low
@@ -199,7 +199,7 @@ cprocstart  _PM_div64
 
         div     ecx
         mov     esi,eax
-        mul     [DWORD esp+b_high+0Ch]
+        mul     dword [esp+b_high+0Ch]
         mov     ecx,eax
         mov     eax,[esp+b_low+0Ch]
         mul     esi
@@ -307,8 +307,3 @@ cprocstart  _PM_neg64
         ret
 
 cprocend
-
-
-endcodeseg  _int64
-
-        END

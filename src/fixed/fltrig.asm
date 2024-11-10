@@ -43,27 +43,23 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
-
-        P387                    ; Turn on i387 instructions
+%include "scitech.mac"          ; Memory model macros
 
 header  fltrig                  ; Set up memory model
 
-begdataseg  fltrig
+section .data
 
         cextern FXpi_180,REAL   ; Real value for PI/180
 
-enddataseg  fltrig
-
-begcodeseg  fltrig
+section .text
 
 ;----------------------------------------------------------------------------
 ; real FXsin(real angle)
 ;----------------------------------------------------------------------------
 cprocstart  FXsin
 
-        fld     [REAL esp+4]    ; ST(0) := angle in degrees
-        fmul    [REAL FXpi_180] ; ST(0) := angle in radians
+        fld     real [esp+4]    ; ST(0) := angle in degrees
+        fmul    real [FXpi_180] ; ST(0) := angle in radians
         fsin                    ; ST(0) := sine of angle
         ret
 
@@ -74,8 +70,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  FXcos
 
-        fld     [REAL esp+4]    ; ST(0) := angle in degrees
-        fmul    [REAL FXpi_180] ; ST(0) := angle in radians
+        fld     real [esp+4]    ; ST(0) := angle in degrees
+        fmul    real [FXpi_180] ; ST(0) := angle in radians
         fcos                    ; ST(0) := cosine of angle
         ret
 
@@ -88,21 +84,21 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  FXsincos
 
-        ARG     angle:REAL, sin:DPTR, cos:DPTR
+        %arg    angle:REAL, sin:DPTR, cos:DPTR
 
         push    ebp
         mov     ebp,esp
         push    ebx
 
-        fld     [REAL angle]    ; ST(0) := angle in degrees
-        fmul    [REAL FXpi_180] ; ST(0) := angle in radians
+        fld     real [angle]    ; ST(0) := angle in degrees
+        fmul    real [FXpi_180] ; ST(0) := angle in radians
         fsincos                 ; ST(1) := sine of angle
                                 ; ST(0) := cosine of angle
         wait                    ; Avoid bugs in fsincos instruction ;-(
         mov     ebx,[cos]       ; ES:_BX -> place for cosine
-        fstp    [REAL ebx]      ; Store cosine value
+        fstp    real [ebx]      ; Store cosine value
         mov     ebx,[sin]       ; ES:_BX -> place for sine
-        fstp    [REAL ebx]      ; Store sine value
+        fstp    real [ebx]      ; Store sine value
 
         pop     ebx
         pop     ebp
@@ -115,8 +111,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  FXtan
 
-        fld     [REAL esp+4]    ; ST(0) := angle in degrees
-        fmul    [REAL FXpi_180] ; ST(0) := angle in radians
+        fld     real [esp+4]    ; ST(0) := angle in degrees
+        fmul    real [FXpi_180] ; ST(0) := angle in radians
         fptan                   ; ST(0) := 1.0
                                 ; ST(1) := tangent
         wait                    ; Avoid bugs with FPTAN
@@ -125,7 +121,3 @@ cprocstart  FXtan
         ret
 
 cprocend
-
-endcodeseg  fltrig
-
-        END                     ; End of module

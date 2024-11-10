@@ -40,11 +40,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"           ; Memory model macros
 
 header  fxzdiv                  ; Set up memory model
 
-begcodeseg  fxzdiv
+section .text
 
 ;----------------------------------------------------------------------------
 ; FXZFixed F386_divFF(FXFixed dividend,FXFixed divisor);
@@ -57,11 +57,13 @@ begcodeseg  fxzdiv
 ;----------------------------------------------------------------------------
 cprocstart  F386_divFF
 
-        mov     edx,[esp+4]     ; Access directly without stack frame
+        %arg    divident:ULONG, divisor:ULONG
+
+        mov     edx,[divident]  ; Access directly without stack frame
         xor     eax,eax
         shrd    eax,edx,16      ; position so that result ends up
         sar     edx,16          ; in EAX
-        idiv    [ULONG esp+8]
+        idiv    dword [divisor]
 
 ; Compute remaining 12 bits of precision
 
@@ -69,7 +71,7 @@ cprocstart  F386_divFF
         shl     edx,12          ; Normalise remainder portion
         mov     eax,edx
         xor     edx,edx         ; Position so result ends up in EAX
-        div     [ULONG esp+8]   ; Find last 12 fractional bits
+        div     dword [divisor] ; Find last 12 fractional bits
         shl     eax,20          ; EAX := bottom 12 bits in 32:20
         shld    ecx,eax,12      ; ECX := result
         mov     eax,ecx
@@ -88,11 +90,13 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_divZF
 
-        mov     edx,[esp+4]     ; Access directly without stack frame
+        %arg divident:ULONG, divisor:ULONG
+
+        mov     edx,[divident]  ; Access directly without stack frame
         xor     eax,eax
         shrd    eax,edx,28      ; position so that result ends up
         sar     edx,28          ; in EAX
-        idiv    [ULONG esp+8]
+        idiv    dword [divisor]
 
 ; Compute remaining 12 bits of precision
 
@@ -100,14 +104,10 @@ cprocstart  F386_divZF
         shl     edx,12          ; Normalise remainder portion
         mov     eax,edx
         xor     edx,edx         ; Position so result ends up in EAX
-        div     [ULONG esp+8]   ; Find last 12 fractional bits
+        div     dword [divisor] ; Find last 12 fractional bits
         shl     eax,20          ; EAX := bottom 12 bits in 32:20
         shld    ecx,eax,12      ; ECX := result
         mov     eax,ecx
         ret
 
 cprocend
-
-endcodeseg  fxzdiv
-
-        END                     ; End of module

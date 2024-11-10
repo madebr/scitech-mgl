@@ -35,24 +35,24 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
-ifdef flatmodel
+%ifdef flatmodel
 
 header  _event                  ; Set up memory model
 
-begdataseg  _event
+section .data
 
     cextern  _EVT_biosPtr,DPTR
 
-%define KB_HEAD     WORD esi+01Ah   ; Keyboard buffer head in BIOS data area
-%define KB_TAIL     WORD esi+01Ch   ; Keyboard buffer tail in BIOS data area
-%define KB_START    WORD esi+080h   ; Start of keyboard buffer in BIOS data area
-%define KB_END      WORD esi+082h   ; End of keyboard buffer in BIOS data area
+%define KB_HEAD     esi+01Ah   ; Keyboard buffer head in BIOS data area
+%define KB_TAIL     esi+01Ch   ; Keyboard buffer tail in BIOS data area
+%define KB_START    esi+080h   ; Start of keyboard buffer in BIOS data area
+%define KB_END      esi+082h   ; End of keyboard buffer in BIOS data area
 
-enddataseg  _event
 
-begcodeseg  _event              ; Start of code segment
+
+section .text                   ; Start of code segment
 
     cpublic _EVT_codeStart
 
@@ -69,19 +69,19 @@ cprocstart  _EVT_getKeyCode
         mov     esi,[_EVT_biosPtr]
         xor     ebx,ebx
         xor     eax,eax
-        mov     bx,[KB_HEAD]
-        cmp     bx,[KB_TAIL]
-        jz      @@Done
+        mov     bx,word [KB_HEAD]
+        cmp     bx,word [KB_TAIL]
+        jz      .Done
         xor     eax,eax
         mov     ax,[esi+ebx]    ; EAX := character from keyboard buffer
         inc     _bx
         inc     _bx
         cmp     bx,[KB_END]     ; Hit the end of the keyboard buffer?
-        jl      @@1
+        jl      .1
         mov     bx,[KB_START]
-@@1:    mov     [KB_HEAD],bx    ; Update keyboard buffer head pointer
+.1:     mov     [KB_HEAD],bx    ; Update keyboard buffer head pointer
 
-@@Done: leave_c
+.Done:  leave_c
         ret
 
 cprocend
@@ -130,11 +130,11 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _EVT_restoreInt
 
-        ARG     ps:UINT
+        %arg    ps:UINT
 
         push    ebp
         mov     ebp,esp         ; Set up stack frame
-        push    [DWORD ps]
+        push    dword [ps]
         popf                    ; Restore processor status (and interrupts)
         pop     ebp
         ret
@@ -148,7 +148,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  EVT_rdinx
 
-        ARG     port:UINT, index:UINT
+        %arg    port:UINT, index:UINT
 
         push    ebp
         mov     ebp,esp
@@ -170,13 +170,13 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  EVT_wrinx
 
-        ARG     port:UINT, index:UINT, value:UINT
+        %arg    port:UINT, index:UINT, value:UINT
 
         push    ebp
         mov     ebp,esp
         mov     edx,[port]
-        mov     al,[BYTE index]
-        mov     ah,[BYTE value]
+        mov     al,byte [index]
+        mov     ah,byte [value]
         out     dx,ax
         pop     ebp
         ret
@@ -185,8 +185,4 @@ cprocend
 
     cpublic _EVT_codeEnd
 
-endcodeseg  _event
-
-endif
-
-        END                         ; End of module
+%endif

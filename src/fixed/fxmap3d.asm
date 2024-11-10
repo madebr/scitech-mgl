@@ -47,12 +47,12 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
-include "fxmacs.mac"            ; Fixed point macros
+%include "scitech.mac"           ; Memory model macros
+%include "fxmacs.mac"            ; Fixed point macros
 
 header  fxmap3d                 ; Set up memory model
 
-begcodeseg  fxmap3d
+section .text
 
 ;----------------------------------------------------------------------------
 ; void F386_map3Dto3D(long *m,long *result,long *p,bool special);
@@ -66,8 +66,8 @@ begcodeseg  fxmap3d
 ;----------------------------------------------------------------------------
 cprocstart  F386_map3Dto3D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
-        LOCAL   temp:ULONG, temp2:ULONG, temp3:ULONG = LocalSize
+        %arg     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %local   temp:ULONG, temp2:ULONG, temp3:ULONG = LocalSize
 
         enter_c
 
@@ -77,22 +77,22 @@ cprocstart  F386_map3Dto3D
 ; Set up a macro to code the unrolled loop to perform the mapping. Here
 ; we perform the mapping of the x,y and z coordinates.
 
-soff=0                          ; Source offset
-doff=0                          ; Destination offset
-        REPT    3               ; Do once for each destination coordinate
+%assign soff 0                  ; Source offset
+%assign doff 0                  ; Destination offset
+        %rep    3               ; Do once for each destination coordinate
 
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
@@ -100,36 +100,36 @@ doff=0                          ; Destination offset
 
         mov     [temp+doff],eax ; Store in destination buffer
 
-soff=soff+16                    ; Point to next source offset
-doff=doff+4                     ; Point to next destination offset
-        ENDM
+%assign soff soff+16            ; Point to next source offset
+%assign doff doff+4             ; Point to next destination offset
+        %endrep
 
-        cmp     [special],0     ; Do we have a special case matrix?
-        je      @@SlowMapping   ; No, so we need to divide through by w
+        cmp     byte [special],0; Do we have a special case matrix?
+        je      .SlowMapping    ; No, so we need to divide through by w
 
         mov     edi,[result]    ; edi -> resultant point
         lea     esi,[temp]      ; esi -> temporary buffer
         mov     ecx,3           ; Need to move 3 doublewords
     rep movsd                   ; Move all three longs at once
 
-        jmp     @@Exit          ; We are done...
+        jmp     .Exit          ; We are done...
 
 ; Compute the new w coordinate for the vector, and divide all coordinates
 ; through by it.
 
-@@SlowMapping:
+.SlowMapping:
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
@@ -144,16 +144,16 @@ doff=doff+4                     ; Point to next destination offset
         mov     edi,[result]    ; ES:edi -> resultant point
         lea     esi,[temp]      ; DS:esi -> temporary buffer
 
-off = 0
-        REPT    3
+%assign off 0
+        %rep 3
         mov     eax,[esi+off]   ; EAX := next coordinate
         imul    ecx             ; EAX := coord / w
         ROUNDIT                 ; EAX := rounded result
         mov     [edi+off],eax
-off = off + 4
-        ENDM
+%assign off off+4
+        %endrep
 
-@@Exit: leave_c
+.Exit:  leave_c
         ret
 
 cprocend
@@ -169,8 +169,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_map3Dto4D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
-        LOCAL   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
+        %arg     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %local   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
 
         enter_c
 
@@ -180,22 +180,22 @@ cprocstart  F386_map3Dto4D
 ; Set up a macro to code the unrolled loop to perform the mapping. Here
 ; we perform the mapping of the x,y and z coordinates.
 
-soff=0                          ; Source offset
-doff=0                          ; Destination offset
-        REPT    3               ; Do once for each destination coordinate
+%assign soff 0                  ; Source offset
+%assign doff 0                  ; Destination offset
+        %rep    3               ; Do once for each destination coordinate
 
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
@@ -203,34 +203,34 @@ doff=0                          ; Destination offset
 
         mov     [temp+doff],eax ; Store in destination buffer
 
-soff=soff+16                    ; Point to next source offset
-doff=doff+4                     ; Point to next destination offset
-        ENDM
+%assign soff soff+16            ; Point to next source offset
+%assign doff doff+4             ; Point to next destination offset
+        %endrep
 
-        cmp     [special],0     ; Do we have a special case matrix?
-        je      @@ComputeW      ; No, so we need to compute W
+        cmp     byte [special],0; Do we have a special case matrix?
+        je      .ComputeW       ; No, so we need to compute W
 
 ; The w coordinate will be the same as the W coordinate of the input
 ; which is 1.0, as the input point is in 3D coordinate space.
 
-        mov     [temp+doff],10000h
-        jmp     @@Exit          ; We are done...
+        mov     dword [temp+doff],10000h
+        jmp     .Exit           ; We are done...
 
 ; Compute the new w coordinate for the vector.
 
-@@ComputeW:
+.ComputeW:
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
@@ -238,7 +238,7 @@ doff=doff+4                     ; Point to next destination offset
 
         mov     [temp+doff],eax ; Store w coordinate
 
-@@Exit: mov     edi,[result]    ; ES:edi -> resultant point
+.Exit:  mov     edi,[result]    ; ES:edi -> resultant point
         lea     esi,[temp]      ; DS:esi -> temporary buffer
         mov     ecx,4           ; Need to move 4 doublewords
     rep movsd                   ; Move all three longs at once
@@ -258,8 +258,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_map4Dto4D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
-        LOCAL   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
+        %arg     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %local   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
 
         enter_c
         use_ds
@@ -270,74 +270,74 @@ cprocstart  F386_map4Dto4D
 ; Set up a macro to code the unrolled loop to perform the mapping. Here
 ; we perform the mapping of the x,y and z coordinates.
 
-soff=0                          ; Source offset
-doff=0                          ; Destination offset
-        REPT    3               ; Do once for each destination coordinate
+%assign soff 0                  ; Source offset
+%assign doff 0                  ; Destination offset
+        %rep    3               ; Do once for each destination coordinate
 
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+12]; EAX := mat[soff][3]
-        imul    [ULONG edi+12]  ; EDX:EAX = p.w * mat[soff][3]
+        imul    dword [edi+12]  ; EDX:EAX = p.w * mat[soff][3]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
         mov     [temp+doff],eax ; Store in destination buffer
 
-soff=soff+16                    ; Point to next source offset
-doff=doff+4                     ; Point to next destination offset
-        ENDM
+%assign soff soff+16            ; Point to next source offset
+%assign doff doff+4             ; Point to next destination offset
+        %endrep
 
-        cmp     [special],0     ; Do we have a special case matrix?
-        je      @@ComputeW      ; No, so we need to compute W
+        cmp     byte [special],0; Do we have a special case matrix?
+        je      .ComputeW       ; No, so we need to compute W
 
 ; The w coordinate will be the same as the W coordinate of the input
 ; point, so just copy it across
 
-        mov     eax,[ULONG edi+12]
+        mov     eax,[edi+12]
         mov     [temp+doff],eax
-        jmp     @@Exit          ; We are done...
+        jmp     .Exit           ; We are done...
 
 ; Compute the new w coordinate for the vector.
 
-@@ComputeW:
+.ComputeW:
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+12]; EAX := mat[soff][3]
-        imul    [ULONG edi+12]  ; EDX:EAX = p.w * mat[soff][3]
+        imul    dword [edi+12]  ; EDX:EAX = p.w * mat[soff][3]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
         mov     [temp+doff],eax ; Store w coordinate
 
-@@Exit: mov     edi,[result]    ; edi -> resultant point
+.Exit:  mov     edi,[result]    ; edi -> resultant point
         lea     esi,[temp]      ; esi -> temporary buffer
         mov     ecx,4           ; Need to move 4 doublewords
     rep movsd                   ; Move all three longs at once
@@ -361,8 +361,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_mapVec3Dto3D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
-        LOCAL   temp:ULONG, temp2:ULONG, temp3:ULONG = LocalSize
+        %arg     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %local   temp:ULONG, temp2:ULONG, temp3:ULONG = LocalSize
 
         enter_c
 
@@ -372,58 +372,58 @@ cprocstart  F386_mapVec3Dto3D
 ; Set up a macro to code the unrolled loop to perform the mapping. Here
 ; we perform the mapping of the x,y and z coordinates.
 
-soff=0                          ; Source offset
-doff=0                          ; Destination offset
-        REPT    3               ; Do once for each destination coordinate
+%assign soff 0                  ; Source offset
+%assign doff 0                  ; Destination offset
+        %rep    3               ; Do once for each destination coordinate
 
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
         mov     [temp+doff],eax ; Store in destination buffer
 
-soff=soff+16                    ; Point to next source offset
-doff=doff+4                     ; Point to next destination offset
-        ENDM
+%assign soff soff+16            ; Point to next source offset
+%assign doff doff+4             ; Point to next destination offset
+        %endrep
 
-        cmp     [special],0     ; Do we have a special case matrix?
-        je      @@SlowMapping   ; No, so we need to divide through by w
+        cmp     byte [special],0; Do we have a special case matrix?
+        je      .SlowMapping    ; No, so we need to divide through by w
 
         mov     edi,[result]    ; edi -> resultant point
         lea     esi,[temp]      ; esi -> temporary buffer
         mov     ecx,3           ; Need to move 3 doublewords
     rep movsd                   ; Move all three longs at once
 
-        jmp     @@Exit          ; We are done...
+        jmp     .Exit           ; We are done...
 
 ; Compute the new w coordinate for the vector, and divide all coordinates
 ; through by it.
 
-@@SlowMapping:
+.SlowMapping:
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
@@ -437,16 +437,16 @@ doff=doff+4                     ; Point to next destination offset
         mov     edi,[result]    ; edi -> resultant point
         lea     esi,[temp]      ; esi -> temporary buffer
 
-off = 0
-        REPT    3
+%assign off 0
+        %rep    3
         mov     eax,[esi+off]   ; EAX := next coordinate
         imul    ecx             ; EAX := coord / w
         ROUNDIT                 ; EAX := rounded result
         mov     [edi+off],eax
-off = off + 4
-        ENDM
+%assign off off+4
+        %endrep
 
-@@Exit: leave_c
+.Exit: leave_c
         ret
 
 cprocend
@@ -462,8 +462,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_mapVec3Dto4D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
-        LOCAL   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
+        %arg     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %local   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
 
         enter_c
 
@@ -473,63 +473,63 @@ cprocstart  F386_mapVec3Dto4D
 ; Set up a macro to code the unrolled loop to perform the mapping. Here
 ; we perform the mapping of the x,y and z coordinates.
 
-soff=0                          ; Source offset
-doff=0                          ; Destination offset
-        REPT    3               ; Do once for each destination coordinate
+%assign soff 0                  ; Source offset
+%assign doff 0                  ; Destination offset
+        %rep    3               ; Do once for each destination coordinate
 
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
-        mov     [temp+doff],eax ; Store in destination buffer
+        mov     dword [temp+doff],eax ; Store in destination buffer
 
-soff=soff+16                    ; Point to next source offset
-doff=doff+4                     ; Point to next destination offset
-        ENDM
+%assign soff soff+16            ; Point to next source offset
+%assign doff doff+4             ; Point to next destination offset
+        %endrep
 
-        cmp     [special],0     ; Do we have a special case matrix?
-        je      @@ComputeW      ; No, so we need to compute W
+        cmp     byte [special],0; Do we have a special case matrix?
+        je      .ComputeW       ; No, so we need to compute W
 
 ; The w coordinate will be the same as the W coordinate of the input
 ; which is 0, as the input vector is in 3D coordinate space.
 
-        mov     [temp+doff],0h
-        jmp     @@Exit          ; We are done...
+        mov     dword [temp+doff],0h
+        jmp     .Exit           ; We are done...
 
 ; Compute the new w coordinate for the vector.
 
-@@ComputeW:
+.ComputeW:
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
         mov     [temp+doff],eax ; Store w coordinate
 
-@@Exit: mov     edi,[result]    ; edi -> resultant point
+.Exit: mov     edi,[result]    ; edi -> resultant point
         lea     esi,[temp]      ; esi -> temporary buffer
         mov     ecx,4           ; Need to move 4 doublewords
     rep movsd                   ; Move all three longs at once
@@ -549,8 +549,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_mapVec4Dto4D
 
-        ARG     m:DPTR, result:DPTR, p:DPTR, special:BOOL
-        LOCAL   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
+        %arg     m:DPTR, result:DPTR, p:DPTR, special:BOOL
+        %local   temp:ULONG, temp2:ULONG, temp3:ULONG, temp4:ULONG = LocalSize
 
         enter_c
 
@@ -560,64 +560,64 @@ cprocstart  F386_mapVec4Dto4D
 ; Set up a macro to code the unrolled loop to perform the mapping. Here
 ; we perform the mapping of the x,y and z coordinates.
 
-soff=0                          ; Source offset
-doff=0                          ; Destination offset
-        REPT    3               ; Do once for each destination coordinate
+%assign soff 0                  ; Source offset
+%assign doff 0                  ; Destination offset
+        %rep    3               ; Do once for each destination coordinate
 
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
         mov     [temp+doff],eax ; Store in destination buffer
 
-soff=soff+16                    ; Point to next source offset
-doff=doff+4                     ; Point to next destination offset
-        ENDM
+%assign soff soff+16            ; Point to next source offset
+%assign doff doff+4             ; Point to next destination offset
+        %endrep
 
-        cmp     [special],0     ; Do we have a special case matrix?
-        je      @@ComputeW      ; No, so we need to compute W
+        cmp     byte [special],0; Do we have a special case matrix?
+        je      .ComputeW       ; No, so we need to compute W
 
 ; The w coordinate will be the same as the W coordinate of the input
 ; point, so just copy it across
 
         mov     eax,[ULONG edi+12]
         mov     [temp+doff],eax
-        jmp     @@Exit          ; We are done...
+        jmp     .Exit           ; We are done...
 
 ; Compute the new w coordinate for the vector.
 
-@@ComputeW:
+.ComputeW:
         mov     eax,[esi+soff]  ; EAX := mat[soff][0]
-        imul    [ULONG edi]     ; EDX:EAX := p.x * mat[soff][0]
+        imul    dword [edi]     ; EDX:EAX := p.x * mat[soff][0]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+soff+4]; EAX := mat[soff][1]
-        imul    [ULONG edi+4]   ; EDX:EAX = p.y * mat[soff][1]
+        imul    dword [edi+4]   ; EDX:EAX = p.y * mat[soff][1]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+soff+8]; EAX := mat[soff][2]
-        imul    [ULONG edi+8]   ; EDX:EAX = p.z * mat[soff][2]
+        imul    dword [edi+8]   ; EDX:EAX = p.z * mat[soff][2]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT                 ; EAX := rounded result
 
         mov     [temp+doff],eax ; Store w coordinate
 
-@@Exit: mov     edi,[result]    ; edi -> resultant point
+.Exit:  mov     edi,[result]     ; edi -> resultant point
         lea     esi,[temp]      ; esi -> temporary buffer
         mov     ecx,4           ; Need to move 4 doublewords
     rep movsd                   ; Move all three longs at once
@@ -626,7 +626,3 @@ doff=doff+4                     ; Point to next destination offset
         ret
 
 cprocend
-
-endcodeseg  fxmap3d
-
-        END                     ; End of module

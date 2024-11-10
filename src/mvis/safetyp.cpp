@@ -41,7 +41,7 @@
 
 #include "mvis/mvision.hpp"
 #include "mvis/mfontmgr.hpp"
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 
 // These are not necessary in protected mode anymore

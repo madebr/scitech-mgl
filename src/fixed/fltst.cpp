@@ -37,11 +37,15 @@
 *
 ****************************************************************************/
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include "fx/float.h"
 #include "ztimer.h"
+
+using std::cin;
+using std::cout;
+using std::endl;
 
 #define MAXITER 2000
 
@@ -299,7 +303,7 @@ void TimeLog10(void)
     cout << MAXITER << " FXlog10's: \t" << LZTimerCount() << " us\n";
 }
 
-void main(void)
+int main(void)
 {
     ZTimerInit();
 
@@ -317,4 +321,5 @@ void main(void)
     TimeLog10();
     TimeLog();
     cout << endl;
+    return 0;
 }

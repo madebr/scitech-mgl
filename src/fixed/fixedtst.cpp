@@ -36,8 +36,8 @@
 *
 ****************************************************************************/
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include <math.h>
 #include "fx/fixed.h"
@@ -49,10 +49,16 @@
 
 #define MAXITER 2000
 
+using std::cin;
+using std::cout;
+using std::endl;
+
+#ifndef __WATCOMC__
 inline double round(double d)
 {
     return floor(d + 0.5);
 }
+#endif
 
 // Routines to compute sine/cosine's of real numbers given in degrees.
 
@@ -128,7 +134,7 @@ void MultDivTest(void)
     cout << "f1 = " << FXrealToDbl(f1) << endl;
     cout << "f3 = " << FXrealToDbl(f3) << endl;
     cout << "f1 * f1 = " << FXrealToDbl(FXmul(f1,f1)) << endl;
-    cout << "f1 * f3 = " << FXrealToDbl(f2) << endl;
+    cout << "f2 = f1 * f3 = " << FXrealToDbl(f2) << endl;
     cout << "f2 * 1.04 = " << FXrealToDbl(FXmul(f2,FXdblToReal(1.04))) << endl;
     FXmuleq(f4,f3);
     cout << "f1 *= f3 = " << FXrealToDbl(f4) << endl;
@@ -183,8 +189,12 @@ void SqrtTest(void)
     f1 = 1.0;
     cout << "sqrt() test:\n";
     while (f1 != 0.0) {
+
         cout << "enter value: ";
         cin >> f1;
+        if (!cin) {
+            break;
+        }
         fx1 = FXdblToReal(f1);
         cout << "sqrt(" << f1 << ") = " << sqrt(f1);
         cout << ", fixed sqrt(" << FXrealToDbl(fx1) << ") = "
@@ -206,6 +216,8 @@ void Log10Test(void)
     while (1) {
         cout << "enter value: ";
         cin >> f1;
+        if (!cin)
+            break;
         if (f1 == 0.0)
             break;
         fx1 = FXdblToReal(f1);
@@ -225,6 +237,8 @@ void LogTest(void)
     while (1) {
         cout << "enter value: ";
         cin >> f1;
+        if (!cin)
+            break;
         if (f1 == 0.0)
             break;
         fx1 = FXdblToReal(f1);
@@ -776,11 +790,17 @@ void TimeSin(void)
 
     // Time how long it takes to do MAXITER floating point sines
 
+#ifdef __WATCOMC__
+#define sinf(X) (float)sin(X)
+#define cosf(X) (float)cos(X)
+#define tanf(X) (float)tan(X)
+#endif
+
     LZTimerOn();
     for (i = 0; i < MAXITER; i++)
-        a2Float[i] = sin(a1Float[i]);
+        a2Float[i] = sinf(a1Float[i]);
     for (i = 0; i < MAXITER; i++)
-        a2Float[i] = sin(a1Float[i]);
+        a2Float[i] = sinf(a1Float[i]);
     LZTimerOff();
     cout << MAXITER*2 << " floating point sin's: \t" << LZTimerCount() << " us\n";
 
@@ -813,9 +833,9 @@ void TimeCos(void)
 
     LZTimerOn();
     for (i = 0; i < MAXITER; i++)
-        a2Float[i] = cos(a1Float[i]);
+        a2Float[i] = cosf(a1Float[i]);
     for (i = 0; i < MAXITER; i++)
-        a2Float[i] = cos(a1Float[i]);
+        a2Float[i] = cosf(a1Float[i]);
     LZTimerOff();
     cout << MAXITER*2 << " floating point cos's: \t" << LZTimerCount() << " us\n";
 
@@ -848,9 +868,9 @@ void TimeTan(void)
 
     LZTimerOn();
     for (i = 0; i < MAXITER; i++)
-        a2Float[i] = tan(a1Float[i]);
+        a2Float[i] = tanf(a1Float[i]);
     for (i = 0; i < MAXITER; i++)
-        a2Float[i] = tan(a1Float[i]);
+        a2Float[i] = tanf(a1Float[i]);
     LZTimerOff();
     cout << MAXITER*2 << " floating point tan's: \t" << LZTimerCount() << " us\n";
 
@@ -1088,7 +1108,7 @@ void TimeLog10(void)
 #endif
 }
 
-void main(void)
+int main(void)
 {
     ZTimerInit();
 
@@ -1125,4 +1145,5 @@ void main(void)
     TimePow();
     TimeLog10();
     TimeLog();
+    return 0;
 }

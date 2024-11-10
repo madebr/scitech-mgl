@@ -36,7 +36,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"           ; Memory model macros
 
 BEGIN_IMPORTS_DEF   __AA_exports
 SKIP_IMP    AA_status,0                   ; Implemented in C code
@@ -49,6 +49,3 @@ DECLARE_IMP AA_unloadDriver,1
 DECLARE_IMP AA_saveOptions,2
 DECLARE_IMP AA_queryFunctions,3
 END_IMPORTS_DEF
-
-        END
-

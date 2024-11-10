@@ -41,17 +41,15 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fxtrig                  ; Set up memory model
 
-begdataseg  fxtrig
+section .data
 
         cextern FXsin_table,ULONG
 
-enddataseg  fxtrig
-
-begcodeseg  fxtrig
+section .text
 
 ;----------------------------------------------------------------------------
 ; FXFixed F386_sin(FXFixed angle)
@@ -62,7 +60,7 @@ begcodeseg  fxtrig
 ;----------------------------------------------------------------------------
 cprocstart  F386_sin
 
-        ARG     angle:ULONG
+        %arg     angle:ULONG
 
         enter_c
 
@@ -70,17 +68,17 @@ cprocstart  F386_sin
 
         mov     eax,[angle]
 
-@@WhileLess:
+.WhileLess:
         cmp     eax,0
-        jge     @@WhileLarger
+        jge     .WhileLarger
         add     eax,1680000h    ; Add 360 degrees
-        jmp     @@WhileLess
+        jmp     .WhileLess
 
-@@WhileLarger:
+.WhileLarger:
         cmp     eax,1680000h
-        jle     @@Convert
+        jle     .Convert
         sub     eax,1680000h    ; Subtract 360 degrees
-        jmp     @@WhileLarger
+        jmp     .WhileLarger
 
 ; Convert angle so that 90 degrees = 256. This gives us the following
 ; as the resulting number:
@@ -90,7 +88,7 @@ cprocstart  F386_sin
 ;  |.quadrant.|.table index.|.interpolant.|
 ;  +----------+-------------+-------------+
 
-@@Convert:
+.Convert:
         mov     edx,2D82Dh      ; EDX := REAL(256.0 / 90.0) = 2.84444..
         imul    edx
         shrd    eax,edx,16      ; EAX := angle * 2.8444...
@@ -103,11 +101,11 @@ cprocstart  F386_sin
         shr     ebx,14          ; EBX := 8 bit table index
         and     ebx,03FCh
         test    esi,01000000h   ; Handle quadrants 1 & 3
-        jz      @@Quad02
+        jz      .Quad02
         not     edx             ; Negate interpolation factor
         xor     ebx,03FCh       ; Index table in reverse order
 
-@@Quad02:
+.Quad02:
         mov     ecx,[FXsin_table+ebx]   ; ECX := FXsin_table[index]
         mov     eax,[FXsin_table+ebx+4] ; EAX := FXsin_table[index+1]
         sub     eax,ecx                 ; EAX := diff
@@ -122,10 +120,10 @@ cprocstart  F386_sin
 ; Handle quadrants 3 & 4 where the values are negated
 
         test    esi,02000000h
-        jz      @@Positive
+        jz      .Positive
         neg     ecx             ; Negate the result
 
-@@Positive:
+.Positive:
         mov     eax,ecx
         leave_c
         ret
@@ -140,7 +138,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_cos
 
-        add     [ULONG esp+4],5A0000h   ; Access directly on stack
+        add     dword [esp+4],5A0000h   ; Access directly on stack
         jmp     F386_sin
 
 cprocend
@@ -157,22 +155,22 @@ cprocstart  F386_tan
 
 ; Ensure that the angle is within the range 0-360 degrees
 
-@@WhileLess:
+.WhileLess:
         cmp     eax,0
-        jge     @@WhileLarger
+        jge     .WhileLarger
         add     eax,1680000h    ; Add 360 degrees
-        jmp     @@WhileLess
+        jmp     .WhileLess
 
-@@WhileLarger:
+.WhileLarger:
         cmp     eax,1680000h
-        jle     @@OK
+        jle     .OK
         sub     eax,1680000h    ; Subtract 360 degrees
-        jmp     @@WhileLarger
+        jmp     .WhileLarger
 
-@@OK:   cmp     eax,5A0000h     ; EAX == REAL(90)?
-        je      @@Invalid
+.OK:   cmp     eax,5A0000h     ; EAX == REAL(90)?
+        je      .Invalid
         cmp     eax,10E0000h    ; EAX == REAL(270)?
-        je      @@Invalid
+        je      .Invalid
 
         push    eax
         call    F386_sin
@@ -191,14 +189,10 @@ cprocstart  F386_tan
         sar     edx,16          ; in EAX
         idiv    ecx             ; EAX := FXsin(angle) / FXcos(angle)
 
-@@Exit: ret
+.Exit: ret
 
-@@Invalid:
+.Invalid:
         mov     eax,7FFFFFFFh
-        jmp     @@Exit
+        jmp     .Exit
 
 cprocend
-
-endcodeseg  fxtrig
-
-        END                     ; End of module

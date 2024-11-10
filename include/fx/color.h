@@ -217,7 +217,7 @@ typedef struct {
 #ifdef  __cplusplus
 
 #ifndef __IOSTREAM_H
-#include <iostream.h>
+#include <iostream>
 #endif
 
 #ifndef __TCL_TECHLIB_HPP

@@ -35,19 +35,17 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"           ; Memory model macros
 
 header  _pcilib
 
-begdataseg  _pcilib
+section .data
 
 cextern _PM_PCIEntry,QWORD
 
-enddataseg  _pcilib
+section .text
 
-begcodeseg  _pcilib
-
-ifdef flatmodel
+%ifdef flatmodel
 
 ;----------------------------------------------------------------------------
 ; uchar _ASMAPI _BIOS32_service(
@@ -61,7 +59,7 @@ ifdef flatmodel
 ;----------------------------------------------------------------------------
 cprocstart   _BIOS32_service
 
-        ARG     service:ULONG, func:ULONG, physBase:DPTR, len:DPTR, off:DPTR
+        %arg    service:ULONG, func:ULONG, physBase:DPTR, len:DPTR, off:DPTR
 
         enter_c
         mov     eax,[service]
@@ -78,7 +76,7 @@ cprocstart   _BIOS32_service
 
 cprocend
 
-endif
+%endif
 
 ;----------------------------------------------------------------------------
 ; ushort _ASMAPI _PCIBIOS_isPresent(ulong i_eax,ulong *o_edx,ushort *oeax,
@@ -88,15 +86,15 @@ endif
 ;----------------------------------------------------------------------------
 cprocstart   _PCIBIOS_isPresent
 
-        ARG     i_eax:ULONG, o_edx:DPTR, oeax:DPTR, o_cl:DPTR
+        %arg     i_eax:ULONG, o_edx:DPTR, oeax:DPTR, o_cl:DPTR
 
         enter_c
         mov     eax,[i_eax]
-ifdef   flatmodel
+%ifdef  flatmodel
         call    far dword [_PM_PCIEntry]
-else
+%else
         int     1Ah
-endif
+%endif
         _les    _si,[o_edx]
         mov     [_ES _si],edx
         _les    _si,[oeax]
@@ -109,6 +107,7 @@ endif
 
 cprocend
 
+%ifdef DOS4GW
 ;----------------------------------------------------------------------------
 ; ulong _PCIBIOS_service(ulong r_eax,ulong r_ebx,ulong r_edi,ulong r_ecx)
 ;----------------------------------------------------------------------------
@@ -117,27 +116,27 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart   _PCIBIOS_service
 
-        ARG     r_eax:ULONG, r_ebx:ULONG, r_edi:ULONG, r_ecx:ULONG
+        %arg     r_eax:ULONG, r_ebx:ULONG, r_edi:ULONG, r_ecx:ULONG
 
         enter_c
         mov     eax,[r_eax]
         mov     ebx,[r_ebx]
         mov     edi,[r_edi]
         mov     ecx,[r_ecx]
-ifdef   flatmodel
+%ifdef  flatmodel
         call    far dword [_PM_PCIEntry]
-else
+%else
         int     1Ah
-endif
+%endif
         mov     eax,ecx
-ifndef  flatmodel
+%ifndef flatmodel
         shld    edx,eax,16      ; Return result in DX:AX
-endif
+%endif
         leave_c
         ret
 
 cprocend
-
+%endif
 ;----------------------------------------------------------------------------
 ; int _PCIBIOS_getRouting(PCIRoutingOptionsBuffer *buf);
 ;----------------------------------------------------------------------------
@@ -145,17 +144,17 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart   _PCIBIOS_getRouting
 
-        ARG     buf:DPTR
+        %arg     buf:DPTR
 
         enter_c
         mov     eax,0B10Eh
         mov     bx,0
         _les    _di,[buf]
-ifdef   flatmodel
+%ifdef  flatmodel
         call    far dword [_PM_PCIEntry]
-else
+%else
         int     1Ah
-endif
+%endif
         movzx   eax,ah
         leave_c
         ret
@@ -169,22 +168,22 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart   _PCIBIOS_setIRQ
 
-        ARG     busDev:UINT, intPin:UINT, IRQ:UINT
+        %arg     busDev:UINT, intPin:UINT, IRQ:UINT
 
         enter_c
         mov     eax,0B10Fh
-        mov     bx,[USHORT busDev]
-        mov     cl,[BYTE intPin]
-        mov     ch,[BYTE IRQ]
-ifdef   flatmodel
+        mov     bx,word [busDev]
+        mov     cl,byte [intPin]
+        mov     ch,byte [IRQ]
+%ifdef  flatmodel
         call    far dword [_PM_PCIEntry]
-else
+%else
         int     1Ah
-endif
+%endif
         mov     eax,1
-        jnc     @@1
+        jnc     .1
         xor     eax,eax         ; Function failed!
-@@1:    leave_c
+.1:    leave_c
         ret
 
 cprocend
@@ -196,17 +195,17 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart   _PCIBIOS_specialCycle
 
-        ARG     bus:UINT, data:ULONG
+        %arg     bus:UINT, data:ULONG
 
         enter_c
         mov     eax,0B106h
         mov     bh,[BYTE bus]
         mov     ecx,[data]
-ifdef   flatmodel
+%ifdef  flatmodel
         call    far dword [_PM_PCIEntry]
-else
+%else
         int     1Ah
-endif
+%endif
         leave_c
         ret
 
@@ -229,7 +228,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_inpb
 
-        ARG     port:UINT
+        %arg     port:UINT
 
         push    _bp
         mov     _bp,_sp
@@ -248,7 +247,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_inpw
 
-        ARG     port:UINT
+        %arg     port:UINT
 
         push    _bp
         mov     _bp,_sp
@@ -267,15 +266,15 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_inpd
 
-        ARG     port:UINT
+        %arg     port:UINT
 
         push    _bp
         mov     _bp,_sp
         mov     _dx,[port]
         in      eax,dx
-ifndef flatmodel
+%ifndef flatmodel
         shld    edx,eax,16      ; DX:AX = result
-endif
+%endif
         pop     _bp
         ret
 
@@ -288,7 +287,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_outpb
 
-        ARG     port:UINT, value:UINT
+        %arg     port:UINT, value:UINT
 
         push    _bp
         mov     _bp,_sp
@@ -307,7 +306,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_outpw
 
-        ARG     port:UINT, value:UINT
+        %arg     port:UINT, value:UINT
 
         push    _bp
         mov     _bp,_sp
@@ -326,7 +325,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_outpd
 
-        ARG     port:UINT, value:ULONG
+        %arg     port:UINT, value:ULONG
 
         push    _bp
         mov     _bp,_sp
@@ -337,7 +336,3 @@ cprocstart  PM_outpd
         ret
 
 cprocend
-
-endcodeseg  _pcilib
-
-        END

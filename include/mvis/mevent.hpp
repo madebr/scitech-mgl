@@ -166,7 +166,7 @@ struct MVJoystickEvent {
 struct MVMessageEvent {
     ulong   command;                // Command for this message
     union {
-        void*   infoPtr;            // Various message data types
+        const void*   infoPtr;      // Various message data types
         long    infoLong;
         ushort  infoWord;
         short   infoInt;

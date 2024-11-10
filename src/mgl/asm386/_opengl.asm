@@ -36,7 +36,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 BEGIN_IMPORTS_DEF   _GA_glFuncs
 DECLARE_STDCALL glAccum,8
@@ -380,5 +380,3 @@ DECLARE_STDCALL glTexImage3D,40
 DECLARE_STDCALL glTexSubImage3D,44
 DECLARE_STDCALL glCopyTexSubImage3D,36
 END_IMPORTS_DEF
-
-        END                     ; End of module

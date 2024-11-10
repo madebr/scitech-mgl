@@ -42,19 +42,13 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fxatrig                 ; Set up memory model
 
-begdataseg  fxatrig
+section .data
 
         cextern FXsin_table,ULONG
         cextern FXatan_table,ULONG
 
-enddataseg  fxatrig
-
-begcodeseg  fxatrig
-
-endcodeseg  fxatrig
-
-        END                     ; End of module
+section .text

@@ -1,0 +1,46 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.platform.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { name: 'MinGW (32-bit)', artifact: 'mingw32', apt-get: 'gcc-mingw-w64 g++-mingw-w64',
+              cmake-args: '-DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/mingw32.cmake' }
+          - { name: 'Watcom (DOS4GW)', watcom-target: 'dos', artifact: 'dos4g', watcom: true,
+              cmake-args: '-DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/watcom-dos4g.cmake' }
+    steps:
+      - uses: actions/checkout@v4
+      - name: 'Install apt-get packages'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build nasm ${{ matrix.platform.apt-get }}
+      - name: Set up Watcom
+        uses: open-watcom/setup-watcom@v0
+        if: ${{ matrix.platform.watcom }}
+        with:
+          target: ${{ matrix.platform.watcom-target }}
+      - name: 'Configure (CMake)'
+        id: cmake-configure
+        run: |
+          cmake -S . -B build -GNinja \
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${{ github.workspace }}/bin" \
+            ${{ matrix.platform.cmake-args }}
+      - name: 'Build (CMake)'
+        run: |
+          ninja -C build -k0
+      - name: 'Add dos4gw.exe to artifacts'
+        if: ${{ always() && steps.cmake-configure.outcome == 'success' && matrix.platform.watcom }}
+        run: |
+          cp ${{ env.WATCOM }}/binw/dos4gw.exe "${{ github.workspace }}/bin"
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && steps.cmake-configure.outcome == 'success' }}
+        with:
+          if-no-files-found: error
+          name: ${{ matrix.platform.artifact }}
+          path: bin

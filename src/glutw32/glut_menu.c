@@ -827,7 +827,7 @@ installMenuCallbacks(void)
   __glutGetMenuItem = getMenuItem;
 }
 
-int APIENTRY 
+int GLUTAPIENTRY
 glutCreateMenu(GLUTselectCB selectFunc)
 {
   XSetWindowAttributes wa;
@@ -886,7 +886,7 @@ glutCreateMenu(GLUTselectCB selectFunc)
 }
 
 /* CENTRY */
-int APIENTRY 
+int GLUTAPIENTRY
 glutGetMenu(void)
 {
   if (__glutCurrentMenu) {
@@ -896,7 +896,7 @@ glutGetMenu(void)
   }
 }
 
-void APIENTRY 
+void GLUTAPIENTRY
 glutSetMenu(int menuid)
 {
   GLUTmenu *menu;
@@ -936,7 +936,7 @@ __glutSetMenuItem(GLUTmenuItem * item, const char *label,
 }
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY
 glutAddMenuEntry(const char *label, int value)
 {
   XSetWindowAttributes wa;
@@ -964,7 +964,7 @@ glutAddMenuEntry(const char *label, int value)
   __glutCurrentMenu->list = entry;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY
 glutAddSubMenu(const char *label, int menu)
 {
   XSetWindowAttributes wa;
@@ -993,7 +993,7 @@ glutAddSubMenu(const char *label, int menu)
   __glutCurrentMenu->list = submenu;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY
 glutAttachMenu(int button)
 {
   if (__glutMappedMenu) {

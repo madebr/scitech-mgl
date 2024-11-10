@@ -24,7 +24,7 @@
 #include "glutint.h"
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY
 glutFullScreen(void)
 {
   assert(!__glutCurrentWindow->parent);

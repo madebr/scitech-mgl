@@ -7,18 +7,18 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fpfunc                  ; Set up memory model
 
-begcodeseg  fpfunc
+section .text
 
 cprocstart  FixedMul
 
         push    ebp
         mov     ebp,esp
         mov     eax,[ebp+8]
-        imul    [DWORD ebp+12]
+        imul    dword [ebp+12]
         shrd    eax,edx,16
         pop     ebp
         ret
@@ -33,13 +33,8 @@ cprocstart  FixedDiv2
         cdq
         shld    edx,eax,16
         sal     eax,16
-        idiv    [DWORD ebp+12]
+        idiv    dword [ebp+12]
         pop     ebp
         ret
 
 cprocend
-
-endcodeseg  fpfunc
-
-        END                     ; End of module
-

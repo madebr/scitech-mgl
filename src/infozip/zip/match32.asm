@@ -30,30 +30,27 @@
 ; Do NOT assemble this source if external crc32 routine from zlib gets used.
 ;
 
-include "scitech.mac"
+%include "scitech.mac"
 
 header      match32
 
-begdataseg  match32
+section .data
 
         cextern match_start,UINT
         cextern prev_length,UINT
         cextern good_match,UINT
-ifndef FULL_SEARCH
+%ifndef FULL_SEARCH
         cextern nice_match,UINT
-endif
+%endif
         cextern strstart,UINT
         cextern max_chain_length,UINT
         cextern prev,USHORT
         cextern window,UCHAR
 
-enddataseg  match32
-
-begcodeseg  match32
-
-ifndef      WSIZE
+section .text
+%ifndef      WSIZE
         WSIZE         EQU 32768         ; keep in sync with zip.h !
-endif
+%endif
         MIN_MATCH     EQU 3
         MAX_MATCH     EQU 258
         MIN_LOOKAHEAD EQU (MAX_MATCH+MIN_MATCH+1)
@@ -95,45 +92,45 @@ cprocstart  longest_match
         mov     edi,edx
         sub     edx,MAX_DIST            ; limit = strstart-MAX_DIST
         cld                             ; string ops increment esi and edi
-        jae     @@limit_ok
+        jae     .limit_ok
         sub     edx,edx                 ; limit = NIL
-@@limit_ok:
+.limit_ok:
         add     edi,2+offset window     ; edi = offset(window + strstart + 2)
         mov     ebx,[prev_length]       ; best_len = prev_length
         mov     cx,[edi-2]              ; cx = scan[0..1]
         mov     ax,[ebx+edi-3]          ; ax = scan[best_len-1..best_len]
         cmp     ebx,[good_match]        ; do we have a good match already?
-        jb      @@do_scan
+        jb      .do_scan
         shr     ebp,2                   ; chain_length >>= 2
-        jmp     @@do_scan
+        jmp     .do_scan
 
         align   4                       ; align destination of branch
-@@long_loop:
+.long_loop:
 ; at this point, edi == scan+2, esi == cur_match
         mov     ax,[ebx+edi-3]          ; ax = scan[best_len-1..best_len]
         mov     cx,[edi-2]              ; cx = scan[0..1]
-@@short_loop:
+.short_loop:
 ; at this point, edi == scan+2, esi == cur_match,
 ; ax = scan[best_len-1..best_len] and cx = scan[0..1]
         and     esi,WSIZE-1
         dec     ebp                     ; --chain_length
         mov     si,[prev+esi+esi]       ; cur_match = prev[cur_match]
                                         ; top word of esi is still 0
-        jz      @@the_end
+        jz      .the_end
         cmp     esi,edx                 ; cur_match <= limit ?
-        jbe     @@the_end
-@@do_scan:
-        cmp     ax,[WORD window+ebx+esi-1]   ; check match at best_len-1
-        jne     @@short_loop
-        cmp     cx,[WORD window+esi]         ; check min_match_length match
-        jne     @@short_loop
+        jbe     .the_end
+.do_scan:
+        cmp     ax,word [window+ebx+esi-1]   ; check match at best_len-1
+        jne     .short_loop
+        cmp     cx,word [window+esi]         ; check min_match_length match
+        jne     .short_loop
 
         lea     esi,[window+esi+2]      ; esi = match
         mov     ecx,(MAX_MATCH-2)/2     ; scan for at most MAX_MATCH bytes
         mov     eax,edi                 ; eax = scan+2
         repe    cmpsw                   ; loop until mismatch
-        je      @@maxmatch              ; match of length MAX_MATCH?
-@@mismatch:
+        je      .maxmatch               ; match of length MAX_MATCH?
+.mismatch:
         mov     cl,[edi-2]              ; mismatch on first or second byte?
         xchg    eax,edi                 ; edi = scan+2, eax = end of scan
         sub     cl,[esi-2]              ; cl = 0 if first bytes EQUal
@@ -143,29 +140,24 @@ cprocstart  longest_match
         sub     cl,1                    ; set carry if cl == 0 (can't use DEC)
         adc     eax,0                   ; eax = carry ? len+1 : len
         cmp     eax,ebx                 ; len > best_len ?
-        jle     @@long_loop
+        jle     .long_loop
         mov     [match_start],esi       ; match_start = cur_match
         mov     ebx,eax                 ; ebx = best_len = len
-ifdef FULL_SEARCH
+%ifdef FULL_SEARCH
         cmp     eax,MAX_MATCH           ; len >= MAX_MATCH ?
-else
+%else
         cmp     eax,[nice_match]        ; len >= nice_match ?
-endif
-        jl      @@long_loop
-@@the_end:
+%endif
+        jl      .long_loop
+.the_end:
         mov     eax,ebx                 ; result = eax = best_len
         pop     ebx
         pop     esi
         pop     edi
         pop     ebp
         ret
-@@maxmatch:                             ; come here if maximum match
+.maxmatch:                              ; come here if maximum match
         cmpsb                           ; increment esi and edi
-        jmp     @@mismatch              ; force match_length = MAX_LENGTH
+        jmp     .mismatch               ; force match_length = MAX_LENGTH
 
 cprocend
-
-endcodeseg  match
-
-        END
-

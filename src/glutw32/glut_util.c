@@ -58,7 +58,7 @@ __glutWarning(char *format,...)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutReportErrors(void)
 {
   GLenum error;

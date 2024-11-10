@@ -38,8 +38,8 @@
 #include "fx/xform2d.h"
 #include "fx/xform3d.h"
 #include "ztimer.h"
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 #include <dos.h>
 #include <conio.h>
 
@@ -306,11 +306,12 @@ void time_it(void)
 
 #endif
 
-void main(void)
+int main(void)
 {
     ZTimerInit();
     test_it();
     getch();
     time_it();
     cout << endl;
+    return 0;
 }

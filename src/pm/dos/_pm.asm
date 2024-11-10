@@ -36,30 +36,28 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"               ; Memory model macros
+%include "scitech.mac"              ; Memory model macros
 
 header      _pmdos                  ; Set up memory model
 
-begdataseg  _pmdos
+section .data
 
-ifdef flatmodel
+%ifdef flatmodel
     cextern _PM_savedDS,USHORT
     cextern _PM_VXD_off,UINT
     cextern _PM_VXD_sel,UINT
-ifdef   DOS4GW
+%ifdef  DOS4GW
     cextern _PM_haveCauseWay,UINT
-endif
-endif
+%endif
+%endif
 intel_id        db  "GenuineIntel"  ; Intel vendor ID
 
 PMHELP_GETPDB       EQU 0026h
 PMHELP_FLUSHTLB     EQU 0027h
 
-enddataseg  _pmdos
+;P586
 
-P586
-
-begcodeseg  _pmdos                  ; Start of code segment
+section .code                       ; Start of code segment
 
 ;----------------------------------------------------------------------------
 ; void PM_segread(PMSREGS *sregs)
@@ -68,7 +66,7 @@ begcodeseg  _pmdos                  ; Start of code segment
 ;----------------------------------------------------------------------------
 cprocstartdll16 PM_segread
 
-        ARG     sregs:DPTR
+        %arg    sregs:DPTR
 
         enter_c
 
@@ -107,21 +105,21 @@ cprocnear   _PM_genInt
 
         push    _ax                     ; Save _ax
         push    _bx                     ; Save _bx
-ifdef flatmodel
-        mov     ebx,[UINT esp+12]       ; EBX := interrupt number
-else
+%ifdef flatmodel
+        mov     ebx,dword [esp+12]      ; EBX := interrupt number
+%else
         mov     bx,sp                   ; Make sure ESP is zeroed
-        mov     bx,[UINT ss:bx+6]       ; BX := interrupt number
-endif
+        mov     bx,dword [ss:bx+6]      ; BX := interrupt number
+%endif
         mov     _ax,offset intTable     ; Point to interrupt generation table
         shl     _bx,2                   ; _BX := index into table
         add     _ax,_bx                 ; _AX := pointer to interrupt code
-ifdef flatmodel
+%ifdef flatmodel
         xchg    eax,[esp+4]             ; Restore eax, and set for int
-else
+%else
         mov     bx,sp
         xchg    ax,[ss:bx+2]            ; Restore ax, and set for int
-endif
+%endif
         pop     _bx                     ; restore _bx
         ret
 
@@ -136,9 +134,9 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstartdll16 PM_int386x
 
-        ARG     intno:UINT, inptr:DPTR, outptr:DPTR, sregs:DPTR
+        %arg    intno:UINT, inptr:DPTR, outptr:DPTR, sregs:DPTR
 
-        LOCAL   flags:UINT, sv_ds:UINT, sv_esi:ULONG = LocalSize
+        %local  flags:UINT, sv_ds:UINT, sv_esi:ULONG = LocalSize
 
         enter_c
         push    ds
@@ -164,27 +162,27 @@ cprocstartdll16 PM_int386x
         push    ds                  ; Save value of DS
         push    _bp                 ; Some interrupts trash this!
         clc                         ; Generate the interrupt
-        push    [UINT intno]
-        mov     ds,[WORD sv_ds]     ; Set value of user's DS selector
+        push    dword [intno]
+        mov     ds,word [sv_ds]     ; Set value of user's DS selector
         call    _PM_genInt
         pop     _bp                 ; Pop intno from stack (flags unchanged)
         pop     _bp                 ; Restore value of stack frame pointer
         pop     ds                  ; Restore value of DS
 
         pushf                       ; Save flags for later
-        pop     [UINT flags]
+        pop     dword [flags]
         push    esi                 ; Save ESI for later
-        pop     [DWORD sv_esi]
+        pop     dword [sv_esi]
         push    ds                  ; Save DS for later
-        pop     [UINT sv_ds]
+        pop     dword [sv_ds]
 
         _lds    _si,[outptr]        ; Save CPU registers
         mov     [_si],eax
         mov     [_si+4],ebx
         mov     [_si+8],ecx
         mov     [_si+12],edx
-        push    [DWORD sv_esi]
-        pop     [DWORD _si+16]
+        push    dword [sv_esi]
+        pop     dword [_si+16]
         mov     [_si+20],edi
 
         mov     _bx,[flags]         ; Return flags
@@ -207,9 +205,9 @@ cprocstartdll16 PM_int386x
 
 cprocend
 
-ifndef flatmodel
+%ifndef flatmodel
 _PM_savedDS     dw  _DATA           ; Saved value of DS
-endif
+%endif
 
 ;----------------------------------------------------------------------------
 ; void PM_saveDS(void)
@@ -221,9 +219,9 @@ endif
 ;----------------------------------------------------------------------------
 cprocstartdll16 PM_saveDS
 
-ifdef flatmodel
+%ifdef flatmodel
         mov     [_PM_savedDS],ds    ; Store away in data segment
-endif
+%endif
         ret
 
 cprocend
@@ -243,14 +241,14 @@ cprocstartdll16 PM_loadDS
 
 cprocend
 
-ifdef flatmodel
+%ifdef flatmodel
 
 ;----------------------------------------------------------------------------
 ; ibool DPMI_allocateCallback(void (*pmcode)(), void *rmregs, long *RMCB)
 ;----------------------------------------------------------------------------
 cprocstart  _DPMI_allocateCallback
 
-        ARG     pmcode:CPTR, rmregs:DPTR, RMCB:DPTR
+        %arg    pmcode:CPTR, rmregs:DPTR, RMCB:DPTR
 
         enter_c
         push    ds
@@ -263,7 +261,7 @@ cprocstart  _DPMI_allocateCallback
         mov     ax,303h         ; AX := allocate realmode callback function
         int     31h
         mov     eax,0           ; Return failure!
-        jc      @@Fail
+        jc      .Fail
 
         mov     eax,[RMCB]
         shl     ecx,16
@@ -271,7 +269,7 @@ cprocstart  _DPMI_allocateCallback
         mov     [es:eax],ecx    ; Return real mode address
         mov     eax,1           ; Return success!
 
-@@Fail: pop     es
+.Fail:  pop     es
         pop     ds
         leave_c
         ret
@@ -283,12 +281,12 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _DPMI_freeCallback
 
-        ARG     RMCB:ULONG
+        %arg    RMCB:ULONG
 
         enter_c
 
-        mov     cx,[WORD RMCB+2]
-        mov     dx,[WORD RMCB]  ; CX:DX := real mode callback
+        mov     cx,word [RMCB+2]
+        mov     dx,word [RMCB]  ; CX:DX := real mode callback
         mov     ax,304h
         int     31h
 
@@ -297,7 +295,7 @@ cprocstart  _DPMI_freeCallback
 
 cprocend
 
-endif
+%endif
 
 ; Macro to delay briefly to ensure that enough time has elapsed between
 ; successive I/O accesses so that the device being accessed can respond
@@ -323,7 +321,7 @@ endif
 ;----------------------------------------------------------------------------
 cprocstart  _PM_readCMOS
 
-        ARG     index:UINT
+        %arg    index:UINT
 
         push    _bp
         mov     _bp,_sp
@@ -354,7 +352,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _PM_writeCMOS
 
-        ARG     index:UINT, value:UCHAR
+        %arg    index:UINT, value:UCHAR
 
         push    _bp
         mov     _bp,_sp
@@ -376,7 +374,7 @@ cprocstart  _PM_writeCMOS
 
 cprocend
 
-ifdef   flatmodel
+%ifdef   flatmodel
 
 ;----------------------------------------------------------------------------
 ; int _PM_pagingEnabled(void)
@@ -386,19 +384,19 @@ ifdef   flatmodel
 cprocstart  _PM_pagingEnabled
 
         mov     eax,-1
-ifdef   DOS4GW
+%ifdef  DOS4GW
         mov     cx,cs
         and     ecx,3
-        jz      @@Ring0
-        cmp     [UINT _PM_haveCauseWay],0
-        jnz     @@Ring0
-        jmp     @@Exit
+        jz      .Ring0
+        cmp     dword [_PM_haveCauseWay],0
+        jnz     .Ring0
+        jmp     .Exit
 
-@@Ring0:
+.Ring0:
         mov     eax,cr0                 ; Load CR0
         shr     eax,31                  ; Isolate paging enabled bit
-endif
-@@Exit: ret
+%endif
+.Exit:  ret
 
 cprocend
 
@@ -407,29 +405,29 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _PM_getPDB
 
-ifdef   DOS4GW
+%ifdef  DOS4GW
         mov     ax,cs
         and     eax,3
-        jz      @@Ring0
-        cmp     [UINT _PM_haveCauseWay],0
-        jnz     @@Ring0
-endif
+        jz      .Ring0
+        cmp     dword [_PM_haveCauseWay],0
+        jnz     .Ring0
+%endif
 
 ; Call VxD if running at ring 3 in a DOS box
 
-        cmp     [WORD _PM_VXD_sel],0
-        jz      @@Fail
+        cmp     word [_PM_VXD_sel],0
+        jz      .Fail
         mov     eax,PMHELP_GETPDB
         call    far dword [_PM_VXD_off]
         ret
 
-@@Ring0:
-ifdef   DOS4GW
+.Ring0:
+%ifdef  DOS4GW
         mov     eax,cr3
         and     eax,0FFFFF000h
         ret
-endif
-@@Fail: xor     eax,eax
+%endif
+.Fail: xor     eax,eax
         ret
 
 cprocend
@@ -441,31 +439,31 @@ cprocstart  PM_flushTLB
 
         mov     ax,cs
         and     eax,3
-        jz      @@Ring0
-ifdef   DOS4GW
-        cmp     [UINT _PM_haveCauseWay],0
-        jnz     @@Ring0
-endif
+        jz      .Ring0
+%ifdef  DOS4GW
+        cmp     dword [_PM_haveCauseWay],0
+        jnz     .Ring0
+%endif
 
 ; Call VxD if running at ring 3 in a DOS box
 
-        cmp     [WORD _PM_VXD_sel],0
-        jz      @@Fail
+        cmp     word [_PM_VXD_sel],0
+        jz      .Fail
         mov     eax,PMHELP_FLUSHTLB
         call    far dword [_PM_VXD_off]
         ret
 
-@@Ring0:
-ifdef   DOS4GW
+.Ring0:
+%ifdef  DOS4GW
         wbinvd                  ; Flush the CPU cache
         mov     eax,cr3
         mov     cr3,eax         ; Flush the TLB
-endif
-@@Fail: ret
+%endif
+.Fail:  ret
 
 cprocend
 
-endif
+%endif
 
 ;----------------------------------------------------------------------------
 ; _PM_enableSSE - Enable SSE extensions in the processor
@@ -493,7 +491,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _PM_VxDCall
 
-        ARG     r:DPTR, off:UINT, sel:UINT
+        %arg    r:DPTR, off:UINT, sel:UINT
 
         enter_c
 
@@ -520,7 +518,7 @@ cprocstart  _PM_VxDCall
         mov     [ebx+12],edx
         mov     [ebx+16],esi
         mov     [ebx+20],edi
-        pop     [DWORD ebx+4]       ; Save value of EBX from stack
+        pop     dword [ebx+4]       ; Save value of EBX from stack
 
         leave_c
         ret
@@ -540,23 +538,19 @@ cprocstart  PM_haveCauseway
 
         mov     ax,0FFF9h
         int     31h
-        jc      @@NotCauseway
+        jc      .NotCauseway
         cmp     ecx,"CAUS"
-        jnz     @@NotCauseway
+        jnz     .NotCauseway
         cmp     edx,"EWAY"
-        jnz     @@NotCauseway
+        jnz     .NotCauseway
 
         mov     eax,1
-        jmp     @@Exit
+        jmp     .Exit
 
-@@NotCauseway:
+.NotCauseway:
         xor     eax,eax
 
-@@Exit: popad
+.Exit:  popad
         ret
 
 cprocend
-
-endcodeseg  _pmdos
-
-        END                     ; End of module

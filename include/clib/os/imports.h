@@ -49,7 +49,7 @@
 #endif
 
 #ifndef _CEXPORT
-#define _CEXPORT __cdecl __export
+#define _CEXPORT __cdecl __declspec(dllexport)
 #endif
 
 #ifdef __cplusplus

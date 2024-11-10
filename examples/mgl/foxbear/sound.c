@@ -40,6 +40,7 @@ History:   03/25/96 AN started
 
 
 #ifdef WIN32
+  #include <windows.h>
   #include "winstk.h"
 
 
@@ -47,8 +48,8 @@ History:   03/25/96 AN started
   #define MIDISONG  "SOUNDS\\FUNK2.MID"
   #define word      WORD
   #define byte      BYTE
-#else
-  #include <sys\stat.h>
+#elif defined(__DOS__)
+  #include <sys/stat.h>
 
 
 

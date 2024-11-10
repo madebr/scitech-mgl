@@ -2,6 +2,7 @@
 /* GENERATED FILE -- DO NOT MODIFY */
 
 #define glutBitmapHelvetica10 XXX
+#include "glutint.h"
 #include "glutbitmap.h"
 #undef glutBitmapHelvetica10
 

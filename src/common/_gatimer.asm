@@ -37,11 +37,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"           ; Memory model macros
 
 header  _gatimer
 
-begcodeseg  _gatimer
+section .text
 
 %macro mCPU_ID 0
 db  00Fh,0A2h
@@ -68,11 +68,11 @@ cprocstart  _GA_haveCPUID
         pushfd                      ; Get new EFLAGS
         pop     eax                 ; Store new EFLAGS in EAX
         xor     eax, ecx            ; Can not toggle ID bit,
-        jnz     @@1                 ; Processor=80486
+        jnz     .1                  ; Processor=80486
         mov     eax,0               ; We dont have CPUID support
-        jmp     @@Done
-@@1:    mov     eax,1               ; We have CPUID support
-@@Done: leave_c
+        jmp     .Done
+.1:     mov     eax,1               ; We have CPUID support
+.Done:  leave_c
         ret
 
 cprocend
@@ -89,16 +89,16 @@ cprocstart  _GA_getCPUIDFeatures
         xor     eax, eax            ; Set up for CPUID instruction
         mCPU_ID                     ; Get and save vendor ID
         cmp     eax, 1              ; Make sure 1 is valid input for CPUID
-        jl      @@Fail              ; We dont have the CPUID instruction
+        jl      .Fail               ; We dont have the CPUID instruction
         xor     eax, eax
         inc     eax
         mCPU_ID                     ; Get family/model/stepping/features
         mov     eax, edx
-@@Done: leave_c
+.Done:  leave_c
         ret
 
-@@Fail: xor     eax,eax
-        jmp     @@Done
+.Fail:  xor     eax,eax
+        jmp     .Done
 
 cprocend
 
@@ -124,18 +124,21 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  GA_TimerDifference
 
-        ARG     a:DPTR, b:DPTR, t:DPTR
+        ;ARG     a:DPTR, b:DPTR
 
         enter_c
 
-        mov     ecx,[a]
+        ; ebp+4 : a
+        ; ebp+8 : b
+
+        mov     ecx,[ebp+4]
         mov     eax,[ecx]       ; EAX := b.low
-        mov     ecx,[b]
+        mov     ecx,[ebp+8]
         sub     eax,[ecx]
         mov     edx,eax         ; EDX := low difference
-        mov     ecx,[a]
+        mov     ecx,[ebp+4]
         mov     eax,[ecx+4]     ; ECX := b.high
-        mov     ecx,[b]
+        mov     ecx,[ebp+8]
         sbb     eax,[ecx+4]     ; EAX := high difference
         mov     eax,edx         ; Return low part
 
@@ -162,13 +165,15 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _OS_delay8253
 
-        ARG     microSec:UINT
+        ;ARG     microSec:UINT
 
         enter_c
 
+        ; ebp+4: microSec
+
 ; Start timer 2 counting
 
-        mov     _ax,[microSec]      ; EAX := count in microseconds
+        mov     _ax,[ebp+4]         ; EAX := count in microseconds
         mov     ecx,1196
         mul     ecx
         mov     ecx,1000
@@ -189,9 +194,9 @@ cprocstart  _OS_delay8253
         out     42h,al              ; load count msb
         xor     di,di               ; Allow max 64K loop iterations
 
-@@LoopStart:
+.LoopStart:
         dec     di                  ; This is a guard against the possibility that
-        jz      @@LoopEnd           ; someone eg. stopped the timer behind our back.
+        jz      .LoopEnd            ; someone eg. stopped the timer behind our back.
                                     ; After 64K iterations we bail out no matter what
                                     ; (and hope it wasn't too soon)
         mov     al,00000000b        ; latch timer 0
@@ -205,10 +210,10 @@ cprocstart  _OS_delay8253
         neg     ax                  ; Convert from countdown remaining
                                     ;  to elapsed count
         cmp     ax,cx               ; Has delay expired?
-        jb      @@LoopStart         ; No, so loop till done
+        jb      .LoopStart          ; No, so loop till done
 
 ; Stop timer 2 from counting
-@@LoopEnd:
+.LoopEnd:
         in      al,61H
         and     al,0FEh
         out     61H,al
@@ -222,8 +227,3 @@ cprocstart  _OS_delay8253
         ret
 
 cprocend
-
-endcodeseg  _gatimer
-
-        END
-

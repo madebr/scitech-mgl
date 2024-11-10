@@ -94,7 +94,7 @@ int main(void)
         printf("Available video modes:\n");
         mode = PM_mapRealPointer(vgaInfo.VideoModePtr >> 16, vgaInfo.VideoModePtr & 0xFFFF);
         while (*mode != 0xFFFF) {
-            printf("    %04hXh (%08X)\n", *mode, (int)mode);
+            printf("    %04hXh (%P)\n", *mode, mode);
             mode++;
             }
         }

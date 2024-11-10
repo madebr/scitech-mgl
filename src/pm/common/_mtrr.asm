@@ -36,21 +36,19 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header      _mtrr               ; Set up memory model
 
-begdataseg  _mtrr
+section .data
 
-ifdef   DOS4GW
+%ifdef   DOS4GW
     cextern _PM_haveCauseWay,UINT
-endif
+%endif
 
-enddataseg  _mtrr
+section .text                   ; Start of code segment
 
-begcodeseg  _mtrr               ; Start of code segment
-
-P586
+;P586
 
 ;----------------------------------------------------------------------------
 ; ibool _MTRR_isRing0(void);
@@ -63,41 +61,41 @@ cprocnear   _MTRR_isRing0
 
 ; Are we running under CauseWay?
 
-ifdef   DOS4GW
+%ifdef  DOS4GW
         enter_c
         mov     ax,cs
         and     eax,3
         xor     eax,3
-        jnz     @@Exit
+        jnz     .Exit
 
 ; CauseWay runs the apps at ring 3, but implements support for specific
 ; ring 0 instructions that we need to get stuff done under real DOS.
 
         mov     eax,1
-        cmp     [UINT _PM_haveCauseWay],0
-        jnz     @@Exit
-@@Fail: xor     eax,eax
-@@Exit: leave_c
+        cmp     dword [_PM_haveCauseWay],0
+        jnz     .Exit
+.Fail:  xor     eax,eax
+.Exit:  leave_c
         ret
-else
-ifdef __SMX32__
+%else
+%ifdef __SMX32__
         mov     eax,1                   ; SMX is ring 0!
         ret
-else
-ifdef __VXD__
+%else
+%ifdef __VXD__
         mov     eax,1                   ; VxD is ring 0!
         ret
-else
-ifdef __NT_DRIVER__
+%else
+%ifdef __NT_DRIVER__
         mov     eax,1                   ; NT/W2K is ring 0!
         ret
-else
+%else
         xor     eax,eax                 ; Assume ring 3 for 32-bit DOS
         ret
-endif
-endif
-endif
-endif
+%endif
+%endif
+%endif
+%endif
 
 cprocend
 
@@ -122,15 +120,15 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _MTRR_restoreInt
 
-        ARG     ps:ULONG
+        %arg    ps:ULONG
 
         push    ebp
         mov     ebp,esp         ; Set up stack frame
         mov     ecx,[ps]
         test    ecx,200h        ; SMP safe interrupt flag restore!
-        jz      @@1
+        jz      .1
         sti
-@@1:    pop     ebp
+.1:     pop     ebp
         ret
 
 cprocend
@@ -177,7 +175,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _MTRR_restoreCR4
 
-        ARG     cr4Val:ULONG
+        %arg    cr4Val:ULONG
 
         enter_c
 
@@ -200,7 +198,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _MTRR_getCx86
 
-        ARG     reg:UCHAR
+        %arg    reg:UCHAR
 
         enter_c
         mov     al,[reg]
@@ -218,7 +216,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _MTRR_setCx86
 
-        ARG     reg:UCHAR, val:UCHAR
+        %arg    reg:UCHAR, val:UCHAR
 
         enter_c
         mov     al,[reg]
@@ -238,7 +236,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocnear   PM_readMSR
 
-        ARG     reg:ULONG, v_eax:DPTR, v_edx:DPTR
+        %arg    reg:ULONG, v_eax:DPTR, v_edx:DPTR
 
         enter_c
         mov     ecx,[reg]
@@ -260,7 +258,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocnear   PM_writeMSR
 
-        ARG     reg:ULONG, v_eax:ULONG, v_edx:ULONG
+        %arg    reg:ULONG, v_eax:ULONG, v_edx:ULONG
 
         enter_c
         mov     ecx,[reg]
@@ -271,7 +269,3 @@ cprocnear   PM_writeMSR
         ret
 
 cprocend
-
-endcodeseg  _mtrr
-
-        END                     ; End of module

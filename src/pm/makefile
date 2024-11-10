@@ -240,8 +240,8 @@ CFLAGS          += -DAGP_TEST_HARNESS
 SHOW_CFLAGS     += -DAGP_TEST_HARNESS
 .IF $(BUILD_SO)
 LIBS            += $(LL)n_agp$(LE)
-.ENDIF
-.ENDIF
+.ENDIF # BUILD_SO
+.ENDIF #AGP_TEST_HARNESS
 .IF $(TEST_HARNESS)
 CFLAGS          += -DTEST_HARNESS -DPMLIB
 SHOW_CFLAGS     += -DTEST_HARNESS
@@ -249,11 +249,11 @@ SHOW_CFLAGS     += -DTEST_HARNESS
 LIBS            += $(LL)n_driver$(LE) $(LL)n_ref2d$(LE)
 .IF $(DEBUG_MATROX)
 LIBS            += $(LL)mgahal$(LE)
-.ENDIF
-.ELSE
+.ENDIF #DEBUG_MATROX
+.ELSE #BUILD_SO
 LIBNAME         := pm_test
-.ENDIF
-.ELSE
+.ENDIF #BUILD_SO
+.ELSE # TEST_HARNESS
 OBJECTS         += galib$O gaoption$O aalib$O
 .IF $(USE_X86)
 OBJECTS         += _ga_imp$O _aa_imp$O
@@ -265,8 +265,8 @@ OBJECTS         += _ga_imp$O
 OBJECTS         += _ga_imp$O
 .ELSE
 Error - unsupported platform
-.ENDIF
-.ENDIF
+.ENDIF #USE_X86
+.ENDIF #TEST_HARNESS
 
 .IF $(BUILD_SO)
 .IF $(NO_PTHREAD)

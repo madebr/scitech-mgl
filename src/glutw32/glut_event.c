@@ -99,13 +99,13 @@ Atom __glutMotifHints = None;
 unsigned int __glutModifierMask = (unsigned int) ~0;
 int __glutWindowDamaged = 0;
 
-void APIENTRY
+void GLUTAPIENTRY
 glutIdleFunc(GLUTidleCB idleFunc)
 {
   __glutIdleFunc = idleFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutTimerFunc(unsigned int interval, GLUTtimerCB timerFunc, int value)
 {
   GLUTtimer *timer, *other;
@@ -203,7 +203,7 @@ __glutPostRedisplay(GLUTwindow * window, int layerMask)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutPostRedisplay(void)
 {
   __glutPostRedisplay(__glutCurrentWindow, GLUT_REDISPLAY_WORK);
@@ -213,7 +213,7 @@ glutPostRedisplay(void)
    glutSetWindow call (entailing an expensive OpenGL context switch),
    particularly useful when multiple windows need redisplays posted at
    the same times.  See also glutPostWindowOverlayRedisplay. */
-void APIENTRY
+void GLUTAPIENTRY
 glutPostWindowRedisplay(int win)
 {
   __glutPostRedisplay(__glutWindowList[win - 1], GLUT_REDISPLAY_WORK);
@@ -1325,7 +1325,7 @@ __glutProcessWindowWorkLists(void)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutMainLoop(void)
 {
 #if !defined(_WIN32)

@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "tcl\str.hpp"
+#include "tcl/str.hpp"
 
-void main(void)
+int main(void)
 {
 	TCDynStr	test("Test");
 
 	test.hash();
+    return 0;
 }

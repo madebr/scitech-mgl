@@ -8,7 +8,6 @@
  * This file contains the code specific to initialising a SciTech MGL
  * Binary Portable DLL.
  */
-
 #include "jpeglib.h"
 #include "scitech.h"
 #include "clib/os/imports.h"

@@ -39,18 +39,12 @@
 ;*
 ;****************************************************************************
 
-INCLUDE "model.mac"             ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  fxpow                   ; Set up memory model
 
-begdataseg  fxpow
+section .data
 
 ;       cextern FXpow_table,USHORT
 
-enddataseg  fxpow
-
-begcodeseg  fxpow
-
-endcodeseg  fxpow
-
-        END                     ; End of module
+section .text

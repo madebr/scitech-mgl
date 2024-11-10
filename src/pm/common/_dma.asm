@@ -35,11 +35,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header      _dma                ; Set up memory model
 
-begdataseg  _dma                ; Start of data segment
+section .data                   ; Start of data segment
 
 cpublic _PM_DMADataStart
 
@@ -54,11 +54,9 @@ DMAC_FF         db 00Ch,00Ch,00Ch,00Ch, -1,0D8h,0D8h,0D8h
 
 cpublic _PM_DMADataEnd
 
-enddataseg  _dma
+section .text                   ; Start of code segment
 
-begcodeseg  _dma                ; Start of code segment
-
-ifdef   flatmodel
+%ifdef   flatmodel
 
 cpublic _PM_DMACodeStart
 
@@ -69,7 +67,7 @@ cpublic _PM_DMACodeStart
 ;----------------------------------------------------------------------------
 cprocstart  PM_DMACDisable
 
-        ARG     channel:UINT
+        %arg    channel:UINT
 
         push    ebp
         mov     ebp,esp
@@ -92,7 +90,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_DMACEnable
 
-        ARG     channel:UINT
+        %arg    channel:UINT
 
         push    ebp
         mov     ebp,esp
@@ -121,7 +119,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_DMACProgram
 
-        ARG     channel:UINT, mode:UINT, bufferPhys:ULONG, count:UINT
+        %arg    channel:UINT, mode:UINT, bufferPhys:ULONG, count:UINT
 
         enter_c
         pushfd
@@ -150,13 +148,13 @@ cprocstart  PM_DMACProgram
         shr     ecx,16              ; CL := bufferPhys >> 16 (DMA page)
         mov     esi,[count]         ; ESI = # of bytes to transfer
         cmp     ebx,4               ; 16-bit channel?
-        jb      @@WriteDMAC         ; No, program DMAC
+        jb      .WriteDMAC          ; No, program DMAC
         shr     eax,1               ; Yes, convert address and count
         shr     esi,1               ; to 16-bit, 128K/page format
 
 ; Set the DMA address word (bits 0-15)
 
-@@WriteDMAC:
+.WriteDMAC:
         mov     dl,[DMAC_addr+ebx]
         out     dx,al
         mov     al,ah
@@ -187,9 +185,9 @@ cprocstart  PM_DMACProgram
 
         pop     eax                 ; SMP safe interrupt state restore!
         test    eax,200h
-        jz      @@1
+        jz      .1
         sti
-@@1:    leave_c
+.1:     leave_c
         ret
 
 cprocend
@@ -202,7 +200,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  PM_DMACPosition
 
-        ARG     channel:UINT
+        %arg    channel:UINT
 
         enter_c
         mov     ecx,[channel]       ; ECX indexes DMAC register tables
@@ -218,7 +216,7 @@ cprocstart  PM_DMACPosition
 
 ; Now read the current position for the channel
 
-@@ReadLoop:
+.ReadLoop:
         mov     dl,[DMAC_cnt+ebx]
         out     dx,al
         in      al,dx
@@ -231,12 +229,12 @@ cprocstart  PM_DMACPosition
         xchg    al,ah               ; EAX := second count read
         sub     ecx,eax
         cmp     ecx,40h
-        jg      @@ReadLoop
+        jg      .ReadLoop
         cmp     ebx,4               ; 16-bit channel?
-        jb      @@Exit              ; No, we are done
+        jb      .Exit               ; No, we are done
         shl     eax,1               ; Yes, adjust to byte address
 
-@@Exit: leave_c
+.Exit:  leave_c
         ret
 
 cprocend
@@ -244,8 +242,5 @@ cprocend
 
 cpublic _PM_DMACodeEnd
 
-endif
+%endif
 
-endcodeseg  _dma
-
-        END                     ; End of module

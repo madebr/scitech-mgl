@@ -93,10 +93,10 @@ REMARKS:
 Creates a new windowed device context for drawing information into a window on
 the X-Window desktop. When you create a Windowed device context, you associate
 it with a standard Windows HWND for the window that you wish MGL to display
-it’s output on. Windowed device contexts are special device contexts in that you
+itï¿½s output on. Windowed device contexts are special device contexts in that you
 cannot directly access the surface for the device, nor can you actually use the MGL
 rasterizing functions to draw on the device surface. The only rasterizing functions
-supported are the MGL_bitBlt and MGL_stretchBlt for blt’ing data from memory device contexts to the window on
+supported are the MGL_bitBlt and MGL_stretchBlt for bltï¿½ing data from memory device contexts to the window on
 the desktop.
 
 However in order to change the color palette values for the data copied to the
@@ -104,7 +104,7 @@ window, you must use the MGL palette functions on the windowed display device
 context. Note that MGL automatically takes care of creating a proper Windows
 identity palette for the windowed device context, so as long as you program the
 same palette values for the windowed device and the memory device you should get
-the maximum performance blt’ing speed.
+the maximum performance bltï¿½ing speed.
 
 MGL automatically uses the highest performance method for implementing the
 BitBlt operations under Windows, and requires the WinG library to be installed if
@@ -123,7 +123,7 @@ format used by the windowed display device context.
 Note that if you wish to only use windowed output and you intend to target
 Windows NT for your application, you must use the MGL_initWindowed function
 to initialize MGL. This will not attempt to load the WinDirect full screen support
-DLL’s, which are not compatible with Windows NT.
+DLLï¿½s, which are not compatible with Windows NT.
 
 SEE ALSO:
 MGL_createMemoryDC, MGL_createDisplayDC, MGL_destroyDC,
@@ -148,7 +148,7 @@ MGLDC * MGLAPI MGL_createWindowedDC(
 
     de.driver = &XWINDC_driver;
     dc->wm.xwindc.dpy = globalDisplay;
-    if (!_MGL_initDC(dc,&de,hwnd,-1,-1,1,false,MGL_DEFAULT_REFRESH))
+    if (!_MGL_initDC(dc,&de,NULL,hwnd,-1,-1,1,false,MGL_DEFAULT_REFRESH))
         goto Error;
     _MGL_deskX = 0;
     _MGL_deskY = 0;
@@ -173,10 +173,12 @@ void MGL_delay(int msecs)
 }
 
 // TODO
-ibool MGLAPI MGL_init(
-    int *pDriver,
-    int *pMode,
-    const char *_mglpath)
+int MGLAPI MGL_init(
+        const char *_mglpath,
+        const char *server)
+//int *pDriver,
+//    int *pMode,
+//    const char *_mglpath)
 {
     char *mglpath = strdup(_mglpath);
     char *ptr;

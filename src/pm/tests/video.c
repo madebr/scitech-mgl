@@ -188,8 +188,8 @@ int main(void)
     /* Display useful status information */
     printf("\n");
     printf("Original Video Mode = 0x%02X\n", orgMode);
-    printf("BIOS Pointer = 0x%08X\n", (int)bios);
-    printf("Video Memory = 0x%08X\n", (int)videoPtr);
+    printf("BIOS Pointer = 0x%P\n", bios);
+    printf("Video Memory = 0x%P\n", videoPtr);
     return 0;
 }
 

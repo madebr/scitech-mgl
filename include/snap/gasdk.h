@@ -122,7 +122,7 @@ void    gmoveto(int _x,int _y);
 void    gnewline(void);
 int     ggetx(void);
 int     ggety(void);
-int     gprintf(char *fmt, ... );
+int     gprintf(const char *fmt, ... );
 ibool   InitSoftwareRasterizer(int deviceIndex,int reservePages,ibool stereo);
 void    ExitSoftwareRasterizer(void);
 void    ForceSoftwareOnly(void);

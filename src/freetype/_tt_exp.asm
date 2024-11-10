@@ -31,7 +31,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"              ; Memory model macros
 
 BEGIN_IMPORTS_DEF	_TT_exports
 DECLARE_IMP ___TT_Init_FreeType,0	; Handled in C code
@@ -83,5 +83,3 @@ DECLARE_IMP TT_Get_Name_Count,0
 DECLARE_IMP TT_Get_Name_ID,0
 DECLARE_IMP TT_Get_Name_String,0
 END_IMPORTS_DEF
-
-		END

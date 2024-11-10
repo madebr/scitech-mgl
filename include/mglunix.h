@@ -59,6 +59,10 @@ typedef XImage      *MGL_HBITMAP;
 /* {secret} */
 typedef Colormap    MGL_HPALETTE;
 
+#ifdef Status
+#undef Status
+#endif
+
 #else
 
 /* {secret} */

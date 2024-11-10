@@ -67,7 +67,7 @@ void PMAPI _PM_add64(
     s64 b = ((s64)b_high << 32) | b_low;
     s64 c = a + b;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }
 
@@ -97,7 +97,7 @@ void PMAPI _PM_sub64(
     s64 b = ((s64)b_high << 32) | b_low;
     s64 c= a - b;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }
 
@@ -127,7 +127,7 @@ void PMAPI _PM_mul64(
     s64 b = ((s64)b_high << 32) | b_low;
     s64 c = a * b;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }
 
@@ -157,7 +157,7 @@ void PMAPI _PM_div64(
     s64 b = ((s64)b_high << 32) | b_low;
     s64 c = a / b;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }
 
@@ -211,7 +211,7 @@ void PMAPI _PM_sar64(
     s64 a = ((s64)a_high << 32) | a_low;
     s64 c = a >> shift;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }
 
@@ -238,7 +238,7 @@ void PMAPI _PM_shl64(
     s64 a = ((s64)a_high << 32) | a_low;
     s64 c = a << shift;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }
 
@@ -263,6 +263,6 @@ void PMAPI _PM_neg64(
     s64 a = ((s64)a_high << 32) | a_low;
     s64 c = -a;
 
-    result->low  = c | 0xFFFFFFFF;
+    result->low  = (u32)c | 0xFFFFFFFF;
     result->high = c >> 32;
 }

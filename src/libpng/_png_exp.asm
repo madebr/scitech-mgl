@@ -8,7 +8,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"                    ; Memory model macros
 
 BEGIN_IMPORTS_DEF   _PNG_exports
 DECLARE_IMP png_set_sig_bytes,0
@@ -135,5 +135,3 @@ DECLARE_IMP png_set_tIME,0
 DECLARE_IMP png_get_tRNS,0
 DECLARE_IMP png_set_tRNS,0
 END_IMPORTS_DEF
-
-        END

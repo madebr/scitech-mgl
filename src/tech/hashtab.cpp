@@ -40,6 +40,8 @@
 #include "tcl/hashtab.hpp"
 #include "tcl/error.hpp"
 
+using std::cout;
+
 /*--------------------------- Member functions ----------------------------*/
 
 TCGenHashTable::TCGenHashTable(uint tabsize)

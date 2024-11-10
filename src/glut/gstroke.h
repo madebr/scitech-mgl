@@ -25,7 +25,7 @@ typedef struct {
 } StrokeCharRec, *StrokeCharPtr;
 
 typedef struct {
-  char *name;
+  const char *name;
   int num_chars;
   StrokeCharPtr ch;
   float top;

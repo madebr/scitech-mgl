@@ -35,11 +35,11 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 header  _fix32                  ; Setup for MGL hybrid 16/32 bit segment
 
-begcodeseg      _fix32          ; Start of hybrid 16/32 code segment
+section .text
 
 ;----------------------------------------------------------------------------
 ; long MGL_FixMul(long a,long b);
@@ -49,10 +49,10 @@ begcodeseg      _fix32          ; Start of hybrid 16/32 code segment
 ;----------------------------------------------------------------------------
 cprocstart  MGL_FixMul
 
-        ARG     a:ULONG, b:ULONG
+        %arg    a:ULONG, b:ULONG
 
         mov     eax,[esp+4]     ; Access directly without stack frame
-        imul    [ULONG esp+8]
+        imul    dword [esp+8]
         add     eax,8000h       ; Round by adding 2^-17
         adc     edx,0           ; Whole part of result is in DX
         shrd    eax,edx,16      ; EAX := a * b
@@ -69,13 +69,13 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_FixDiv
 
-        ARG     dividend:ULONG, divisor:ULONG
+        %arg    dividend:ULONG, divisor:ULONG
 
         mov     edx,[esp+4]     ; Access directly without stack frame
         xor     eax,eax
         shrd    eax,edx,16      ; position so that result ends up
         sar     edx,16          ; in EAX
-        idiv    [ULONG esp+8]
+        idiv    dword [esp+8]
         ret
 
 cprocend
@@ -91,13 +91,13 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_ZFixDiv
 
-        ARG     dividend:ULONG, divisor:ULONG
+        %arg    dividend:ULONG, divisor:ULONG
 
         mov     edx,[esp+4]     ; Access directly without stack frame
         xor     eax,eax
         shrd    eax,edx,28      ; position so that result ends up
         sar     edx,28          ; in EAX
-        idiv    [ULONG esp+8]
+        idiv    dword [esp+8]
 
 ; Compute remaining 12 bits of precision
 
@@ -105,7 +105,7 @@ cprocstart  MGL_ZFixDiv
         shl     edx,12          ; Normalise remainder portion
         mov     eax,edx
         xor     edx,edx         ; Position so result ends up in EAX
-        div     [ULONG esp+8]   ; Find last 12 fractional bits
+        div     dword [esp+8]   ; Find last 12 fractional bits
         shl     eax,20          ; EAX := bottom 12 bits in 32:20
         shld    ecx,eax,12      ; ECX := result
         mov     eax,ecx
@@ -124,11 +124,11 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_FixMulDiv
 
-        ARG     a:ULONG, b:ULONG, c:ULONG
+        %arg    a:ULONG, b:ULONG, c:ULONG
 
         mov     eax,[esp+4]     ; Access directly without stack frame
-        imul    [ULONG esp+8]   ; EDX:EAX := 64 bit dividend
-        idiv    [ULONG esp+12]  ; Divide the 64 bit dividend
+        imul    dword [esp+8]   ; EDX:EAX := 64 bit dividend
+        idiv    dword [esp+12]  ; Divide the 64 bit dividend
         ret
 
 cprocend
@@ -142,30 +142,26 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  MGL_backfacing
 
-        ARG     dx1:ULONG, dy1:ULONG, dx2:ULONG, dy2:ULONG
+        %arg    dx1:ULONG, dy1:ULONG, dx2:ULONG, dy2:ULONG
 
         push    ebp
         mov     ebp,esp
         push    ebx
 
         mov     eax,[dx1]
-        imul    [ULONG dy2]     ; EDX:EAX := dx1 * dy2
+        imul    dword [dy2]     ; EDX:EAX := dx1 * dy2
         mov     ebx,eax
         mov     ecx,edx         ; ECX:EBX := dx1 * dy2
         mov     eax,[dx2]
-        imul    [ULONG dy1]     ; EDX:EAX := dx2 * dy1
+        imul    dword [dy1]     ; EDX:EAX := dx2 * dy1
         sub     eax,ebx
         mov     eax,1           ; Default to backfacing
         sbb     edx,ecx         ; EDX:EAX := dx1 * dy2 - dx2 * dy1
-        jns     @@Backfacing
+        jns     .Backfacing
         xor     eax,eax         ; Polygon is frontfacing
-@@Backfacing:
+.Backfacing:
         pop     ebx
         pop     ebp
         ret
 
 cprocend
-
-endcodeseg  _fix32
-
-        END                     ; End of module

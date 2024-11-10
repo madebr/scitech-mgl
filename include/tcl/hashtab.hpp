@@ -43,8 +43,12 @@
 #endif
 
 #ifndef __IOSTREAM_H
-#include <iostream.h>
+#include <iostream>
 #endif
+
+using std::ostream;
+
+class TCGenHashTable;
 
 /*--------------------------- Class Definition ----------------------------*/
 
@@ -53,7 +57,6 @@
 // a single hash table bucket together. To put anything useful into the
 // table, you must derive the object place in the table from TCHashTableNode.
 //---------------------------------------------------------------------------
-
 class TCHashTableNode {
 protected:
     TCHashTableNode *next;

@@ -99,6 +99,7 @@ driverent _MGL_staticDrivers[] = {
 /*------------------------- Implementation --------------------------------*/
 
 #include "mgl/license.h"
+#include "GL/gl_stub.h"
 
 /****************************************************************************
 REMARKS:

@@ -73,7 +73,7 @@ uint        scWinLightBlue      = 12;
 uint        scWinLightMagenta   = 13;
 uint        scWinLightCyan      = 14;
 uint        scWinWhite          = 15;
-static int  *sysColors;
+static uint *sysColors;
 
 // Normal system color palette RGB values
 static palette_t normalPalette[] = {
@@ -112,7 +112,7 @@ static palette_t winPalette[] = {
 #define NUM_WINPAL (sizeof(winPalette)/sizeof(palette_t))
 
 // System color mappings for normal color palette
-static int normalSysColors[scMaxSystemColor] = {
+static uint normalSysColors[scMaxSystemColor] = {
     scBlack,                        // Invalid system color index
     scBlack,                        // Desktop pattern background color
     scJade,                         // Desktop pattern foregound color
@@ -160,7 +160,7 @@ static int normalSysColors[scMaxSystemColor] = {
     };                              // Maximum system color index+1
 
 // System color mappings for Windows style system color palette
-static int winSysColors[scMaxSystemColor] = {
+static uint winSysColors[scMaxSystemColor] = {
     scWinBlack,                     // Invalid system color index
     scWinBlack,                     // Desktop pattern background color
     scWinDarkCyan,                  // Desktop pattern foregound color
@@ -362,7 +362,7 @@ void MV_loadSystemResources(MGLDevCtx& dc,int systemFont,int paletteType)
     int             maxy = dc.sizey()+1;
     int             maxx = dc.sizex()+1;
     MVFontRecord    fontRec(_MV_systemFont = systemFont);
-    char            *bitmapName,*glyphName;
+    const char      *bitmapName,*glyphName;
     char            buf[PM_MAX_PATH];
 
     if (maxx <= 400) {

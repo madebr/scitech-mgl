@@ -760,7 +760,7 @@ modes. It begins drawing the string at the current location, and moves to
 the start of the next logical line.
 ****************************************************************************/
 int gprintf(
-    char *fmt,
+    const char *fmt,
     ...)
 {
     va_list argptr;

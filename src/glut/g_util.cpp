@@ -36,7 +36,7 @@
 
 /*------------------------- Implementation --------------------------------*/
 
-void __glutWarning(char *format,...)
+void __glutWarning(const char *format, ...)
 {
     va_list args;
     FILE    *f;
@@ -52,7 +52,7 @@ void __glutWarning(char *format,...)
     fclose(f);
 }
 
-void __glutFatalError(char *format,...)
+void __glutFatalError(const char *format,...)
 {
     va_list args;
     char    buf1[128],buf2[128];
@@ -66,7 +66,7 @@ void __glutFatalError(char *format,...)
     MGL_fatalError(buf1);
 }
 
-void __glutFatalUsage(char *format,...)
+void __glutFatalUsage(const char *format,...)
 {
     va_list args;
     char    buf1[128],buf2[128];

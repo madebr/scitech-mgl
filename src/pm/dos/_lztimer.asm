@@ -86,7 +86,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"
+%include "scitech.mac"
 
 ;****************************************************************************
 ;
@@ -122,7 +122,7 @@ TIMER_COUNT     equ     6Ch
 
 header      _lztimer
 
-begdataseg  _lztimer
+section .data
 
         cextern  _ZTimerBIOSPtr,DPTR
 
@@ -130,9 +130,7 @@ StartBIOSCount      dd  0       ; Starting BIOS count dword
 EndBIOSCount        dd  0       ; Ending BIOS count dword
 EndTimedCount       dw  0       ; Timer 0 count at the end of timing period
 
-enddataseg  _lztimer
-
-begcodeseg  _lztimer                ; Start of code segment
+section .text                   ; Start of code segment
 
 ;----------------------------------------------------------------------------
 ; void LZ_timerOn(void);
@@ -161,11 +159,11 @@ cprocstart  LZ_timerOn
 ; Store the timing start BIOS count
 
         use_es
-ifdef   flatmodel
+%ifdef   flatmodel
         mov     ebx,[_ZTimerBIOSPtr]
-else
+%else
         les     bx,[_ZTimerBIOSPtr]
-endif
+%endif
         cli                         ; No interrupts while we grab the count
         mov     eax,[_ES _bx+TIMER_COUNT]
         sti
@@ -203,11 +201,11 @@ cprocstart  LZ_timerOff
 ; count won't change).
 
         use_es
-ifdef   flatmodel
+%ifdef  flatmodel
         mov     ebx,[_ZTimerBIOSPtr]
-else
+%else
         les     bx,[_ZTimerBIOSPtr]
-endif
+%endif
         mov     eax,[_ES _bx+TIMER_COUNT]
         mov     [EndBIOSCount],eax
         unuse_es
@@ -250,11 +248,11 @@ cprocstart  LZ_timerLap
 ; count wont change).
 
         use_es
-ifdef   flatmodel
+%ifdef  flatmodel
         mov     ebx,[_ZTimerBIOSPtr]
-else
+%else
         les     bx,[_ZTimerBIOSPtr]
-endif
+%endif
         mov     eax,[_ES _bx+TIMER_COUNT]
         mov     [EndBIOSCount],eax
         unuse_es
@@ -278,16 +276,16 @@ endif
 
         mov     eax,[EndBIOSCount]      ; Is end < start?
         cmp     eax,[StartBIOSCount]
-        jae     @@CalcBIOSTime          ; No, calculate the time taken
+        jae     .CalcBIOSTime           ; No, calculate the time taken
 
 ; Adjust the finishing time by adding the number of ticks in 24 hours
 ; (1573040).
 
-        add     [DWORD EndBIOSCount],1800B0h
+        add     dword [EndBIOSCount],1800B0h
 
 ; Convert the BIOS time to microseconds
 
-@@CalcBIOSTime:
+.CalcBIOSTime:
         mov     ax,[EndBIOSCount]
         sub     ax,[StartBIOSCount]
         mov     dx,54925            ; Number of microseconds each
@@ -311,13 +309,13 @@ endif
 
         add     ax,bx
         adc     cx,0
-ifdef flatmodel
+%ifdef flatmodel
         shl     ecx,16
         mov     cx,ax
         mov     eax,ecx             ; EAX := timer count
-else
+%else
         mov     dx,cx
-endif
+%endif
         pop     ebx                 ; Restore EBX for 32 bit code
         ret
 
@@ -342,28 +340,28 @@ cprocstart  LZ_timerCount
 
         mov     eax,[EndBIOSCount]      ; Is end < start?
         cmp     eax,[StartBIOSCount]
-        jae     @@CheckForHour          ; No, check for hour passing
+        jae     .CheckForHour           ; No, check for hour passing
 
 ; Adjust the finishing time by adding the number of ticks in 24 hours
 ; (1573040).
 
-        add     [DWORD EndBIOSCount],1800B0h
+        add     dword [EndBIOSCount],1800B0h
 
 ; See if more than an hour passed during timing. If so, notify the user.
 
-@@CheckForHour:
+.CheckForHour:
         mov     ax,[StartBIOSCount+2]
         cmp     ax,[EndBIOSCount+2]
-        jz      @@CalcBIOSTime      ; Hour count didn't change, so
+        jz      .CalcBIOSTime       ; Hour count didn't change, so
                                     ;  everything is fine
 
         inc     ax
         cmp     ax,[EndBIOSCount+2]
-        jnz     @@TestTooLong       ; Two hour boundaries passed, so the
+        jnz     .TestTooLong        ; Two hour boundaries passed, so the
                                     ;  results are no good
         mov     ax,[EndBIOSCount]
         cmp     ax,[StartBIOSCount]
-        jb      @@CalcBIOSTime      ; a single hour boundary passed. That's
+        jb      .CalcBIOSTime       ; a single hour boundary passed. That's
                                     ; OK, so long as the total time wasn't
                                     ; more than an hour.
 
@@ -372,18 +370,18 @@ cprocstart  LZ_timerCount
 ; multiple of 24 hours has passed, but we'll rely on the perspicacity of
 ; the user to detect that case :-).
 
-@@TestTooLong:
-ifdef   flatmodel
+.TestTooLong:
+%ifdef  flatmodel
         mov     eax,0FFFFFFFFh
-else
+%else
         mov     ax,0FFFFh
         mov     dx,0FFFFh
-endif
-        jmp     short @@Done
+%endif
+        jmp     short .Done
 
 ; Convert the BIOS time to microseconds
 
-@@CalcBIOSTime:
+.CalcBIOSTime:
         mov     ax,[EndBIOSCount]
         sub     ax,[StartBIOSCount]
         mov     dx,54925            ; Number of microseconds each
@@ -407,15 +405,15 @@ endif
 
         add     ax,bx
         adc     cx,0
-ifdef flatmodel
+%ifdef flatmodel
         shl     ecx,16
         mov     cx,ax
         mov     eax,ecx             ; EAX := timer count
-else
+%else
         mov     dx,cx
-endif
+%endif
 
-@@Done: pop     ebx                 ; Restore EBX for 32 bit code
+.Done:  pop     ebx                 ; Restore EBX for 32 bit code
         ret
 
 cprocend
@@ -429,7 +427,3 @@ cprocstart   LZ_enable
         sti
         ret
 cprocend
-
-endcodeseg  _lztimer
-
-        END

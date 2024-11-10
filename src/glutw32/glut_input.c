@@ -574,7 +574,7 @@ __glutUpdateInputDeviceMask(GLUTwindow * window)
 }
 
 /* CENTRY */
-int APIENTRY
+int GLUTAPIENTRY
 glutDeviceGet(GLenum param)
 {
   probeDevices();

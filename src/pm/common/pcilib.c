@@ -129,7 +129,7 @@ PCIBIOS_entry _VARAPI   _PM_PCIEntry = {0}; /* PCI services entry point */
 
 /*----------------------------- Implementation ----------------------------*/
 
-#ifdef __INTEL__
+#ifndef __linux__
 
 /* External assembler helper functions */
 
@@ -259,7 +259,7 @@ REMARKS:
 This functions reads/writes configuration data via the PCI BIOS. For Win32
 we have to call into the ring 0 driver to make this work.
 ****************************************************************************/
-static N_uint32 PCIAPI _PCIBIOS_service(
+N_uint32 PCIAPI _PCIBIOS_service(
     N_uint32  r_eax,
     N_uint32  r_ebx,
     N_uint32  r_edi,
@@ -970,7 +970,7 @@ int PCIAPI PCI_enumerate(
 {
     int numFound;
 
-#ifdef __INTEL__
+#ifndef __linux__
     /* First try via the direct access mechanisms which are faster if we
      * have them (nearly always). The BIOS is used as a fallback, and for
      * stuff we can't do directly.
@@ -1045,7 +1045,7 @@ u32 PCIAPI PCI_accessReg(
     int func,
     PCIDeviceInfo *info)
 {
-#ifdef __INTEL__
+#ifndef __LINUX__
     int iobase;
 
     if (info->mech1 == 2) {

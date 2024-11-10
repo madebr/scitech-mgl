@@ -112,6 +112,20 @@
 #define MAX_HEART_BEAT_CALLBACKS    10
 #define HEART_BEAT_CALLBACK_TIME    (32 * 1000)
 
+/* 2.6.26+ kernels don't define the legacy masks. */
+#if defined(__linux__)
+    #if !defined(TF_MASK)
+        #define TF_MASK X86_EFLAGS_TF
+        #define IF_MASK X86_EFLAGS_IF
+        #define NT_MASK X86_EFLAGS_NT
+        #define VIF_MASK X86_EFLAGS_VIF
+        #define VIP_MASK X86_EFLAGS_VIP
+    #endif
+    #if !defined(IOPL_MASK)
+        #define IOPL_MASK X86_EFLAGS_IOPL
+    #endif
+#endif
+
 #if defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
     /* union semun is defined by including <sys/sem.h> */
 #else
@@ -1121,28 +1135,30 @@ void PMAPI PM_init(void)
     real_mem_init();
 #endif
     if ((fd_mem = open("/dev/mem", O_RDWR)) == -1) {
-        PM_fatalError("You must have root privileges to run this program!");
+        char buf[256];
+        sprintf(buf, "a You must have root privileges to run this program! %s", strerror(errno));
+        PM_fatalError(buf);
         }
 #if defined(__INTEL__) || defined(__X86_64__)
     if ((m = mmap((void *)0, 0x502,
             PROT_READ | PROT_WRITE | PROT_EXEC,
             MAP_FIXED | MAP_PRIVATE, fd_mem, 0)) == (void *)-1) {
-        PM_fatalError("You must have root privileges to run this program!");
+        PM_fatalError("b You must have root privileges to run this program!");
         }
     if ((m = mmap((void *)0xA0000, 0xC0000 - 0xA0000,
             PROT_READ | PROT_WRITE,
             MAP_FIXED | MAP_SHARED, fd_mem, 0xA0000)) == (void *)-1) {
-        PM_fatalError("You must have root privileges to run this program!");
+        PM_fatalError("c You must have root privileges to run this program!");
         }
     if ((m = mmap((void *)0xC0000, 0xD0000 - 0xC0000,
             PROT_READ | PROT_WRITE | PROT_EXEC,
             MAP_FIXED | MAP_PRIVATE, fd_mem, 0xC0000)) == (void *)-1) {
-        PM_fatalError("You must have root privileges to run this program!");
+        PM_fatalError("d You must have root privileges to run this program!");
         }
     if ((m = mmap((void *)0xD0000, 0x100000 - 0xD0000,
             PROT_READ | PROT_WRITE,
             MAP_FIXED | MAP_SHARED, fd_mem, 0xD0000)) == (void *)-1) {
-        PM_fatalError("You must have root privileges to run this program!");
+        PM_fatalError("e You must have root privileges to run this program!");
         }
 #endif
     inited = 1;

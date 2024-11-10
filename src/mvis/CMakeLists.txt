@@ -1,0 +1,41 @@
+add_library(mvis
+    mvision.cpp
+    hotkey.cpp
+    mbackgnd.cpp
+    mbitbtn.cpp
+    mbutton.cpp
+    mcheckbx.cpp
+    mdesktop.cpp
+    mdialog.cpp
+    message.cpp
+    mevent.cpp
+    mfiledlg.cpp
+    mfontmgr.cpp
+    mframe.cpp
+    mgroup.cpp
+    minputl.cpp
+    misc.cpp
+    mlabel.cpp
+    mlist.cpp
+    mmenu.cpp
+    mmenubar.cpp
+    mmenuite.cpp
+    mmltext.cpp
+    mmodesel.cpp
+    mprogram.cpp
+    mradio.cpp
+    mrendera.cpp
+    mscrollb.cpp
+    msgbox.cpp
+    mstatic.cpp
+    msttext.cpp
+    mtbbtn.cpp
+    mtitleb.cpp
+    mview.cpp
+    mvtext.cpp
+    mwindow.cpp
+    safetyp.cpp
+    validvw.cpp
+    viewstk.cpp
+)
+target_include_directories(mvis PUBLIC "$<BUILD_INTERFACE:${MGL_SOURCE_DIR}/include>")

@@ -87,10 +87,10 @@ protected:
             void runDemo(int demo);
 
             // Method to set the demonstration title name
-            void setDemoTitle(char *title);
+            void setDemoTitle(const char *title);
 
             // Method to set the information window text
-            void setInfoText(char *text);
+            void setInfoText(const char *text);
 
 public:
             // Constructor

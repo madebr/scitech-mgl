@@ -181,8 +181,15 @@ void PMAPI PM_init(void)
              * current directory is for loading SNAP drivers.
              */
             inBuf[0] = (ulong)PM_getCurrentPath(cntPath,sizeof(cntPath));
-            if (!DeviceIoControl(_PM_hDevice, PMHELP_SETCNTPATH32, inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &count, NULL))
-                PM_fatalError("Unable to set VxD current path!");
+            if (!DeviceIoControl(_PM_hDevice, PMHELP_SETCNTPATH32, inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &count, NULL)) {
+                char buf[256];
+                char buf2[512];
+                FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                               NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                               buf, (sizeof(buf) / sizeof(char)), NULL);
+                sprintf(buf2, "Unable to set VxD current path! (%s)", buf);
+                PM_fatalError(buf2);
+            }
 
             /* Now pass down the SNAP_PATH environment variable to the device
              * driver so it can use this value if it is found.

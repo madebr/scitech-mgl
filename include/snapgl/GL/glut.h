@@ -432,9 +432,9 @@ extern void glutSolidTetrahedron(void);
 extern void glutWireIcosahedron(void);
 extern void glutSolidIcosahedron(void);
 
-extern void __glutWarning       (char *format,...);
-extern void __glutFatalError(char *format,...);
-extern void __glutFatalUsage(char *format,...);
+extern void __glutWarning(const char *format,...);
+extern void __glutFatalError(const char *format,...);
+extern void __glutFatalUsage(const char *format,...);
 
 #ifdef __cplusplus
 }

@@ -11,7 +11,7 @@
 #include "glutint.h"
 
 /* CENTRY */
-int APIENTRY 
+int GLUTAPIENTRY
 glutExtensionSupported(const char *extension)
 {
   static const GLubyte *extensions = NULL;

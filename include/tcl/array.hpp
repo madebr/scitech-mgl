@@ -224,11 +224,11 @@ public:
             // Method to do a binary search for an item
             uint binarySearch(T item,uint first,uint last) const;
             uint binarySearch(T item) const
-                { return binarySearch(item,0,count-1); };
+                { return binarySearch(item,0,this->count-1); };
 
             // Method to sort the elements in the array
             void sort()
-                { qsort(data,count,sizeof(T),(_compare_func_t)TCSArray<T>::cmp); };
+                { qsort(this->data,this->count,sizeof(T),(_compare_func_t)TCSArray<T>::cmp); };
     };
 
 //---------------------------------------------------------------------------
@@ -276,7 +276,7 @@ public:
             // Methods to search for an element in the array
             uint search(const T* item,uint first,uint last,int direction = +1) const;
             uint search(const T* item,int direction = +1) const
-                { return search(item,0,count-1,direction); };
+                { return search(item,0,this->count-1,direction); };
 
             // Method to set the number of elements in the array (empties it)
             void setCount(uint newCount);
@@ -322,11 +322,11 @@ public:
             // Method to do a binary search for an item
             uint binarySearch(const T* item,uint first,uint last) const;
             uint binarySearch(const T* item) const
-                { return binarySearch(item,0,count-1); };
+                { return binarySearch(item,0,this->count-1); };
 
             // Method to sort the elements in the array
             void sort()
-                { qsort(data,count,sizeof(T*),(_compare_func_t)TCISArray<T>::cmp); };
+                { qsort(this->data,this->count,sizeof(T*),(_compare_func_t)TCISArray<T>::cmp); };
     };
 
 //---------------------------------------------------------------------------
@@ -487,7 +487,7 @@ template <class T> inline void TCIArray<T>::setCount(uint newCount)
 ****************************************************************************/
 {
     resize(newCount);
-    count = newCount;
+    this->count = newCount;
 }
 
 /*---------------------------- Implementation -----------------------------*/
@@ -823,8 +823,8 @@ template <class T> void TCSArray<T>::addSorted(T item)
     uint i;
 
     CHECK(valid());
-    T *p = data;
-    for (i = 0; i < count; i++)
+    T *p = this->data;
+    for (i = 0; i < this->count; i++)
         if (*p++ > item)
             break;
     insert(item,i);
@@ -851,13 +851,13 @@ template <class T> uint TCSArray<T>::binarySearch(T item,uint L,uint R) const
 
     while (L < R) {
         uint M = (L+R)/2;
-        if (data[M] == item)
+        if (this->data[M] == item)
             return M;
-        if (data[M] < item)
+        if (this->data[M] < item)
             L = M+1;
         else R = M-1;
         }
-    if (data[L] == item)
+    if (this->data[L] == item)
         return L;
     return UINT_MAX;
 }
@@ -876,7 +876,7 @@ template <class T> const TCIArray<T>& TCIArray<T>::operator = (const TCIArray<T>
     // Check to make sure we are not being assigned to ourselves :-)
 
     CHECK(valid() && a.valid());
-    if (data != a.data) {
+    if (this->data != a.data) {
         empty();
         shouldDelete = false;
         TCArray<T*>::operator=(a);
@@ -894,10 +894,10 @@ template <class T> ibool TCIArray<T>::operator == (const TCIArray<T>& a)
 ****************************************************************************/
 {
     CHECK(valid() && a.valid());
-    if (count != a.count)
+    if (this->count != a.count)
         return false;
-    T **p = data, **pa = a.data;
-    for (uint i = 0; i < count; i++)
+    T **p = this->data, **pa = a.data;
+    for (uint i = 0; i < this->count; i++)
         if (!(*(*p++) == *(*pa++)))
             return false;
     return true;
@@ -918,8 +918,8 @@ template <class T> void TCIArray<T>::replace(T* item,uint index)
     CHECK(valid());
     CHECK(index < count);
     if (shouldDelete)
-        delete data[index];
-    data[index] = item;
+        delete this->data[index];
+    this->data[index] = item;
 }
 
 template <class T> void TCIArray<T>::destroy(uint index)
@@ -941,10 +941,10 @@ template <class T> void TCIArray<T>::destroy(uint index)
     // Move the items down one position, and shrink the allocated memory
 
     if (shouldDelete)
-        delete data[index];
-    count--;
-    memmove(&data[index],&data[index+1],(count-index) * sizeof(T*));
-    shrink();
+        delete this->data[index];
+    this->count--;
+    memmove(&this->data[index],&this->data[index+1],(this->count-index) * sizeof(T*));
+    this->shrink();
 }
 
 template <class T> uint TCIArray<T>::search(const T* item,uint first,uint last,
@@ -967,13 +967,13 @@ template <class T> uint TCIArray<T>::search(const T* item,uint first,uint last,
     CHECK(first < count && last < count);
     CHECK(direction == +1 || direction == -1);
     if (direction == +1) {
-        T **p = &data[first];
+        T **p = &this->data[first];
         for (uint i = first; i <= last; i++)
             if (*(*p++) == *item)
                 return i;
         }
     else {
-        T **p = &data[last];
+        T **p = &this->data[last];
         for (uint i = last; i >= first; i--)
             if (*(*p--) == *item)
                 return i;
@@ -995,7 +995,7 @@ template <class T> void TCIArray<T>::resize(uint newSize)
 {
     CHECK(_delta != 0);
     empty();
-    expand(newSize);
+    this->expand(newSize);
 }
 
 template <class T> void TCIArray<T>::empty()
@@ -1009,8 +1009,8 @@ template <class T> void TCIArray<T>::empty()
 ****************************************************************************/
 {
     if (shouldDelete) {
-        for (uint i = 0; i < count; i++)
-            delete (T*)data[i];
+        for (uint i = 0; i < this->count; i++)
+            delete (T*)this->data[i];
         }
     TCArray<T*>::empty();
 }
@@ -1053,8 +1053,8 @@ template <class T> void TCISArray<T>::addSorted(T* item)
     // array.
 
     CHECK(valid());
-    T **p = data;
-    for (i = 0; i < count; i++)
+    T **p = this->data;
+    for (i = 0; i < this->count; i++)
         if (*(*p++) > *item)
             break;
     insert(item,i);
@@ -1082,13 +1082,13 @@ template <class T> uint TCISArray<T>::binarySearch(const T* item,uint L,
 
     while (L < R) {
         uint M = (L+R)/2;
-        if (*data[M] == *item)
+        if (*this->data[M] == *item)
             return M;
-        if (*data[M] < *item)
+        if (*this->data[M] < *item)
             L = M+1;
         else R = M-1;
         }
-    if (*data[L] == *item)
+    if (*this->data[L] == *item)
         return L;
     return UINT_MAX;
 }

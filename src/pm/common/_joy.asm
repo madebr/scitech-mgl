@@ -36,13 +36,13 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
-ifdef flatmodel
+%ifdef flatmodel
 
 header  _joy                    ; Set up memory model
 
-begcodeseg  _joy                ; Start of code segment
+section .text                   ; Start of code segment
 
 ;----------------------------------------------------------------------------
 ; initTimer
@@ -119,9 +119,9 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  _EVT_readJoyAxis
 
-        ARG     jmask:UINT, axis:DPTR
+        %arg    jmask:UINT, axis:DPTR
 
-        LOCAL   firstTick:UINT, lastTick:UINT, totalTicks:UINT = LocalSize
+        %local  firstTick:UINT, lastTick:UINT, totalTicks:UINT = LocalSize
 
         enter_c
 
@@ -134,76 +134,76 @@ cprocstart  _EVT_readJoyAxis
         call    readTimer           ; Returns counter in EAX
         mov     [lastTick],eax
 
-@@WaitStable:
+.WaitStable:
         in      al,dx
         and     al,bl               ; Wait for the axes in question to be
-        jz      @@Stable            ;  done reading...
+        jz      .Stable             ;  done reading...
         call    readTimer           ; Returns counter in EAX
         xchg    eax,[lastTick]
         cmp     eax,[lastTick]
-        jb      @@1
+        jb      .1
         sub     eax,[lastTick]
-@@1:    add     [totalTicks],eax
+.1:     add     [totalTicks],eax
         cmp     [totalTicks],ecx    ; Check for timeout
-        jae     @@Stable
-        jmp     @@WaitStable
+        jae     .Stable
+        jmp     .WaitStable
 
-@@Stable:
+.Stable:
         mov     al,0FFh
         out     dx,al               ; Start joystick reading
         call    initTimer           ; Start timer 2 counting
         call    readTimer           ; Returns counter in EAX
         mov     [firstTick],eax     ; Store initial count
         mov     [lastTick],eax
-        mov     [DWORD totalTicks],0
+        mov     dword [totalTicks],0
         cli
 
-@@PollLoop:
+.PollLoop:
         in      al,dx               ; Read Joystick port
         not     al
         and     al,bl               ; Mask off channels we don't want to read
-        jnz     @@AxisFlipped       ; See if any of the channels flipped
+        jnz     .AxisFlipped        ; See if any of the channels flipped
         call    readTimer           ; Returns counter in EAX
         xchg    eax,[lastTick]
         cmp     eax,[lastTick]
-        jb      @@2
+        jb      .2
         sub     eax,[lastTick]
-@@2:    add     [totalTicks],eax
+.2:     add     [totalTicks],eax
         cmp     [totalTicks],ecx    ; Check for timeout
-        jae     @@TimedOut
-        jmp     @@PollLoop
+        jae     .TimedOut
+        jmp     .PollLoop
 
-@@AxisFlipped:
+.AxisFlipped:
         xor     esi,esi
         mov     ah,1
         test    al,ah
-        jnz     @@StoreCount        ; Joystick 1, X axis flipped
+        jnz     .StoreCount         ; Joystick 1, X axis flipped
         add     esi,4
         mov     ah,2
         test    al,ah
-        jnz     @@StoreCount        ; Joystick 1, Y axis flipped
+        jnz     .StoreCount         ; Joystick 1, Y axis flipped
         add     esi,4
         mov     ah,4
         test    al,ah
-        jnz     @@StoreCount        ; Joystick 2, X axis flipped
+        jnz     .StoreCount         ; Joystick 2, X axis flipped
         add     esi,4               ; Joystick 2, Y axis flipped
         mov     ah,8
 
-@@StoreCount:
+.StoreCount:
         or      bh,ah               ; Indicate this axis is active
         xor     bl,ah               ; Unmark the channels that just tripped
         call    readTimer           ; Returns counter in EAX
         xchg    eax,[lastTick]
         cmp     eax,[lastTick]
-        jb      @@3
+        jb      .3
         sub     eax,[lastTick]
-@@3:    add     [totalTicks],eax
+.3:     add     [totalTicks],eax
         mov     eax,[totalTicks]
         mov     [edi+esi],eax       ; Record the time this channel flipped
         cmp     bl,0                ; If there are more channels to read,
-        jne     @@PollLoop          ;   keep looping
+        jne     .PollLoop           ;   keep looping
 
-@@TimedOut:
+.TimedOut:
         sti
         call    exitTimer           ; Stop timer 2 counting
         movzx   eax,bh              ; Return the mask of working axes
@@ -230,6 +230,4 @@ cprocend
 
 endcodeseg  _joy
 
-endif
-
-        END                         ; End of module
+%endif

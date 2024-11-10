@@ -48,12 +48,12 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
-include "fxmacs.mac"            ; Fixed point macros
+%include "fxmacs.mac"            ; Fixed point macros
+%include "scitech.mac"           ; Memory model macros
 
 header  fxmat3d             ; Set up memory model
 
-begcodeseg  fxmat3d
+section .text
 
 ;----------------------------------------------------------------------------
 ; void F386_scale3D(long *m,long xscale,long yscale,zscale)
@@ -63,41 +63,41 @@ begcodeseg  fxmat3d
 ;----------------------------------------------------------------------------
 cprocstart  F386_scale3D
 
-        ARG     m:DPTR, xscale:ULONG, yscale:ULONG, zscale:ULONG
+        %arg     m:DPTR, xscale:ULONG, yscale:ULONG, zscale:ULONG
 
         enter_c
 
         mov     esi,[m]         ; esi -> xform matrix
         mov     ebx,[xscale]    ; EBX := x scale factor
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off]
         imul    ebx             ; EDX:EAX := mat[0][off] * xscale
         ROUNDIT
         mov     [esi+off],eax   ; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
         mov     ebx,[yscale]    ; EBX := y scale factor
 
-        REPT    4
+%rep 4
         mov     eax,[esi+off]
         imul    ebx             ; EDX:EAX := mat[1][off] * yscale
         ROUNDIT
         mov     [esi+off],eax   ; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
         mov     ebx,[zscale]    ; EBX := z scale factor
 
-        REPT    4
+%rep 4
         mov     eax,[esi+off]
         imul    ebx             ; EDX:EAX := mat[1][off] * yscale
         ROUNDIT
         mov     [esi+off],eax   ; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
         leave_c
         ret
@@ -112,42 +112,42 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_rotatex3D
 
-        ARG     T:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG
+        %arg     T:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG
 
         enter_c
 
         mov     esi,[m]         ; esi -> xform matrix
         mov     edi,[T]         ; edi -> resultant temporary matrix
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off+16]
-        imul    [Cos]
+        imul    dword [Cos]
         mov     ecx,eax         ; EBX:ECX := mat[1][off] * Cos
         mov     ebx,edx
         mov     eax,[esi+off+32]
-        imul    [Sin]
+        imul    dword [Sin]
         sub     ecx,eax         ; EBX:ECX := mat[1][off] * Cos - mat[2][off] * Sin
         sbb     ebx,edx
         ROUNDIT_EBX_ECX
-        mov     [edi+off],eax; Store result
-off = off + 4
-        ENDM
+        mov     [edi+off],eax   ; Store result
+%assign off off+4
+%endrep
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off+16]
-        imul    [Sin]
+        imul    dword [Sin]
         mov     ecx,eax         ; EBX:ECX := mat[1][off] * Sin
         mov     ebx,edx
         mov     eax,[esi+off+32]
-        imul    [Cos]
+        imul    dword [Cos]
         add     eax,ecx         ; EDX:EAX := mat[2][off] * Cos + mat[1][off] * Sin
         adc     edx,ebx
         ROUNDIT
         mov     [edi+off+16],eax; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
         leave_c
         ret
@@ -162,42 +162,42 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_rotatey3D
 
-        ARG     T:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG
+        %arg     T:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG
 
         enter_c
 
         mov     esi,[m]         ; esi -> xform matrix
         mov     edi,[T]         ; edi -> resultant temporary matrix
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off]
-        imul    [Cos]
+        imul    dword [Cos]
         mov     ecx,eax         ; EBX:ECX := mat[0][off] * Cos
         mov     ebx,edx
         mov     eax,[esi+off+32]
-        imul    [Sin]
+        imul    dword [Sin]
         sub     ecx,eax         ; EBX:ECX := mat[0][off] * Cos - mat[2][off] * Sin
         sbb     ebx,edx
         ROUNDIT_EBX_ECX
         mov     [edi+off],eax; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off]
-        imul    [Sin]
+        imul    dword [Sin]
         mov     ecx,eax         ; EBX:ECX := mat[0][off] * Sin
         mov     ebx,edx
         mov     eax,[esi+off+32]
-        imul    [Cos]
+        imul    dword [Cos]
         add     eax,ecx         ; EDX:EAX := mat[2][off] * Cos + mat[0][off] * Sin
         adc     edx,ebx
         ROUNDIT
         mov     [edi+off+16],eax; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
         leave_c
         ret
@@ -212,42 +212,42 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_rotatez3D
 
-        ARG     T:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG
+        %arg     T:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG
 
         enter_c
 
         mov     esi,[m]         ; esi -> xform matrix
         mov     edi,[T]         ; edi -> resultant temporary matrix
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off]
-        imul    [Cos]
+        imul    dword [Cos]
         mov     ecx,eax         ; EBX:ECX := mat[0][off] * Cos
         mov     ebx,edx
         mov     eax,[esi+off+16]
-        imul    [Sin]
+        imul    dword [Sin]
         sub     ecx,eax         ; EBX:ECX := mat[0][off] * Cos - mat[1][off] * Sin
         sbb     ebx,edx
         ROUNDIT_EBX_ECX
         mov     [edi+off],eax; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
-off = 0
-        REPT    4
+%assign off 0
+%rep 4
         mov     eax,[esi+off]
-        imul    [Sin]
+        imul    dword [Sin]
         mov     ecx,eax         ; EBX:ECX := mat[0][off] * Sin
         mov     ebx,edx
         mov     eax,[esi+off+16]
-        imul    [Cos]
+        imul    dword [Cos]
         add     eax,ecx         ; EDX:EAX := mat[1][off] * Cos + mat[0][off] * Sin
         adc     edx,ebx
         ROUNDIT
         mov     [edi+off+16],eax; Store result
-off = off + 4
-        ENDM
+%assign off off+4
+%endrep
 
         leave_c
         ret
@@ -264,8 +264,8 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_rotate3D
 
-        ARG     T:DPTR, T2:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG,          \
-                Cos_1:ULONG, x:ULONG, y:ULONG, z:ULONG
+        %ARG     T:DPTR, T2:DPTR, m:DPTR, Sin:ULONG, Cos:ULONG,          \
+                 Cos_1:ULONG, x:ULONG, y:ULONG, z:ULONG
 
         enter_c
 
@@ -276,19 +276,19 @@ cprocstart  F386_rotate3D
         mov     eax,[x]
         imul    eax
         ROUNDIT                 ; EAX := x*x
-        imul    [Cos_1]
+        imul    dword [Cos_1]
         ROUNDIT                 ; EAX := x*x*(1-Cos)
         add     eax,[Cos]       ; EAX := Cos + x*x(1-Cos)
         mov     [edi],eax       ; T[0][0] = EAX
 
         mov     eax,[x]
-        imul    [y]
+        imul    dword [y]
         ROUNDIT                 ; EAX := x*y
-        imul    [Cos_1]
+        imul    dword [Cos_1]
         ROUNDIT
         mov     ebx,eax         ; EBX := x*y*(1-Cos)
         mov     eax,[z]
-        imul    [Sin]
+        imul    dword [Sin]
         ROUNDIT                 ; EAX := z*Sin
         sub     ebx,eax         ; EBX := x*y*(1-Cos) - z*Sin
         mov     [edi+4],ebx     ; T[0][1] = EBX
@@ -296,13 +296,13 @@ cprocstart  F386_rotate3D
         mov     [edi+12],ebx    ; T[1][0] = -T[0][1]
 
         mov     eax,[x]
-        imul    [z]
+        imul    dword [z]
         ROUNDIT                 ; EAX := x*z
-        imul    [Cos_1]
+        imul    dword [Cos_1]
         ROUNDIT
         mov     ebx,eax         ; EBX := x*z*(1-Cos)
         mov     eax,[y]
-        imul    [Sin]
+        imul    dword [Sin]
         ROUNDIT                 ; EAX := y*Sin
         add     eax,ebx         ; EAX := x*z*(1-Cos) + y*Sin
         mov     [edi+8],eax     ; T[0][2] = EAX
@@ -312,19 +312,19 @@ cprocstart  F386_rotate3D
         mov     eax,[y]
         imul    eax
         ROUNDIT                 ; EAX := y*y
-        imul    [Cos_1]
+        imul    dword [Cos_1]
         ROUNDIT                 ; EAX := y*y*(1-Cos)
         add     eax,[Cos]       ; EAX := Cos + y*y(1-Cos)
         mov     [edi+16],eax    ; T[1][1] = EAX
 
         mov     eax,[y]
-        imul    [z]
+        imul    dword [z]
         ROUNDIT                 ; EAX := y*z
-        imul    [Cos_1]
+        imul    dword [Cos_1]
         ROUNDIT
         mov     ebx,eax         ; EBX := y*z*(1-Cos)
         mov     eax,[x]
-        imul    [Sin]
+        imul    dword [Sin]
         ROUNDIT                 ; EAX := x*Sin
         sub     ebx,eax         ; EBX := y*z*(1-Cos) - x*Sin
         mov     [edi+20],ebx    ; T[1][2] = EBX
@@ -334,7 +334,7 @@ cprocstart  F386_rotate3D
         mov     eax,[z]
         imul    eax
         ROUNDIT                 ; EAX := z*z
-        imul    [Cos_1]
+        imul    dword [Cos_1]
         ROUNDIT                 ; EAX := z*z*(1-Cos)
         add     eax,[Cos]       ; EAX := Cos + z*z(1-Cos)
         mov     [edi+32],eax    ; T[2][2] = EAX
@@ -345,25 +345,25 @@ cprocstart  F386_rotate3D
 ; Now concatentate this rotation matrix with the upper left 3x3
 ; sub-matrix of the current transformation matrix
 
-roff=0                          ; Row offset starts at zero
-troff=0
-        REPT    3               ; Repeat once for all rows
+%assign roff 0                  ; Row offset starts at zero
+%assign troff 0
+%rep 3                          ; Repeat once for all rows
 
-coff=0                          ; Column offset starts at zero
-        REPT    3               ; Do once for each column
+%assign coff 0                  ; Column offset starts at zero
+        %rep 3                  ; Do once for each column
 
         mov     eax,[esi+troff] ; EAX := T[troff][0]
-        imul    [ULONG edi+coff]; EDX:EAX := T[troff][0] * m[0][coff]
+        imul    dword [edi+coff]; EDX:EAX := T[troff][0] * m[0][coff]
         mov     ecx,eax
         mov     ebx,edx         ; EBX:ECX := running total
 
         mov     eax,[esi+troff+4]; EAX := T[troff][1]
-        imul    [ULONG edi+16+coff]; EDX:EAX := T[troff][1] * m[1][coff]
+        imul    dword [edi+16+coff]; EDX:EAX := T[troff][1] * m[1][coff]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+troff+8]; EAX := T[troff][2]
-        imul    [ULONG edi+32+coff]; EDX:EAX := T[troff][2] * m[2][coff]
+        imul    dword [edi+32+coff]; EDX:EAX := T[troff][2] * m[2][coff]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT
@@ -373,14 +373,14 @@ coff=0                          ; Column offset starts at zero
         mov     [ebx+roff+coff],eax ; T2[roff][coff] := EAX
         unuse_ds
 
-coff=coff+4                     ; Point to next column offset
+%assign coff coff+4             ; Point to next column offset
 
-        ENDM                    ; End of inner column loop
+        %endrep                 ; End of inner column loop
 
-roff=roff+16                    ; Point to next row
-troff=troff+12
+%assign roff roff+16            ; Point to next row
+%assign troff troff+12
 
-        ENDM                    ; End of outer row loop
+        %endrep                 ; End of outer row loop
 
         leave_c
         ret
@@ -399,7 +399,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_concat4x4
 
-        ARG     result:DPTR, m1:DPTR, m2:DPTR, special:BOOL
+        %arg    result:DPTR, m1:DPTR, m2:DPTR, special:BOOL
 
         enter_c
 
@@ -409,29 +409,29 @@ cprocstart  F386_concat4x4
 ; Set up two imbedded macros to code the unrolled loops to multiply the
 ; matrices.
 
-roff=0                          ; Row offset starts at zero
-        REPT    3               ; Repeat once for all rows except last
+%assign roff 0                  ; Row offset starts at zero
+        %rep 3                  ; Repeat once for all rows except last
 
-coff=0                          ; Column offset starts at zero
-        REPT    4               ; Do once for each column
+%assign coff 0                  ; Column offset starts at zero
+        %rep 4                  ; Do once for each column
 
         mov     eax,[esi+roff]  ; EAX := m1.mat[roff][0]
-        imul    [ULONG edi+coff]; EDX:EAX := m1.mat[roff][0] * m2.mat[0][coff]
+        imul    dword [edi+coff]; EDX:EAX := m1.mat[roff][0] * m2.mat[0][coff]
         mov     ecx,eax
         mov     ebx,edx         ; EBX:ECX := running total
 
         mov     eax,[esi+roff+4]; EAX := m1.mat[roff][1]
-        imul    [ULONG edi+16+coff]; EDX:EAX := m1.mat[roff][1] * m2.mat[1][coff]
+        imul    dword [edi+16+coff]; EDX:EAX := m1.mat[roff][1] * m2.mat[1][coff]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+roff+8]; EAX := m1.mat[roff][2]
-        imul    [ULONG edi+32+coff]; EDX:EAX := m1.mat[roff][2] * m2.mat[2][coff]
+        imul    dword [edi+32+coff]; EDX:EAX := m1.mat[roff][2] * m2.mat[2][coff]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+roff+12]; EAX := m1.mat[roff][3]
-        imul    [ULONG edi+48+coff]; EDX:EAX := m1.mat[roff][3] * m2.mat[3][coff]
+        imul    dword [edi+48+coff]; EDX:EAX := m1.mat[roff][3] * m2.mat[3][coff]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT
@@ -441,16 +441,16 @@ coff=0                          ; Column offset starts at zero
         mov     [ebx+roff+coff],eax ; result.mat[roff][coff] := EAX
         unuse_ds
 
-coff=coff+4                     ; Point to next column offset
+%assign coff coff+4             ; Point to next column offset
 
-        ENDM                    ; End of inner column loop
+        %endrep                 ; End of inner column loop
 
-roff=roff+16                    ; Point to next row
+%assign roff roff+16            ; Point to next row
 
-        ENDM                    ; End of outer row loop
+        %endrep                 ; End of outer row loop
 
-        cmp     [special],0     ; Do we have a special case matrix mult?
-        je      @@ComputeBot    ; No, compute Bottom row of matrix
+        cmp     byte [special],0; Do we have a special case matrix mult?
+        je      .ComputeBot     ; No, compute Bottom row of matrix
 
 ; Set the bottom row of the matrix to be <0,0,0,1>
 
@@ -461,32 +461,32 @@ roff=roff+16                    ; Point to next row
         mov     [ebx+roff+8],eax; Store each zero
         or      eax,10000h
         mov     [ebx+roff+12],eax; Store the 1.0
-        jmp     @@Exit
+        jmp     .Exit
 
 ; Compute the bottom row for the matrix
 
-@@ComputeBot:
+.ComputeBot:
 
-coff=0                          ; Column offset starts at zero
-        REPT    4               ; Do once for each column
+%assign coff 0                  ; Column offset starts at zero
+        %rep 4                  ; Do once for each column
 
         mov     eax,[esi+roff]  ; EAX := m1.mat[roff][0]
-        imul    [ULONG edi+coff]; EDX:EAX := m1.mat[roff][0] * m2.mat[0][coff]
+        imul    dword [edi+coff]; EDX:EAX := m1.mat[roff][0] * m2.mat[0][coff]
         mov     ecx,eax         ; Set running total
         mov     ebx,edx
 
         mov     eax,[esi+roff+4]; EAX := m1.mat[roff][1]
-        imul    [ULONG edi+16+coff]; EDX:EAX := m1.mat[roff][1] * m2.mat[1][coff]
+        imul    dword [edi+16+coff]; EDX:EAX := m1.mat[roff][1] * m2.mat[1][coff]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+roff+8]; EAX := m1.mat[roff][2]
-        imul    [ULONG edi+32+coff]; EDX:EAX := m1.mat[roff][2] * m2.mat[2][coff]
+        imul    dword [edi+32+coff]; EDX:EAX := m1.mat[roff][2] * m2.mat[2][coff]
         add     ecx,eax         ; Update running total
         adc     ebx,edx
 
         mov     eax,[esi+roff+12]; EAX := m1.mat[roff][3]
-        imul    [ULONG edi+48+coff]; EDX:EAX := m1.mat[roff][3] * m2.mat[3][coff]
+        imul    dword [edi+48+coff]; EDX:EAX := m1.mat[roff][3] * m2.mat[3][coff]
         add     eax,ecx         ; Update running total
         adc     edx,ebx
         ROUNDIT
@@ -494,15 +494,11 @@ coff=0                          ; Column offset starts at zero
         mov     ebx,[result]
         mov     [ebx+roff+coff],eax ; result.mat[roff][coff] := EAX
 
-coff=coff+4                     ; Point to next column offset
+%assign coff coff+4             ; Point to next column offset
 
-        ENDM                    ; End of inner column loop
+        %endrep                 ; End of inner column loop
 
-@@Exit: leave_c
+.Exit: leave_c
         ret
 
 cprocend
-
-endcodeseg  fxmat3d
-
-        END                     ; End of module

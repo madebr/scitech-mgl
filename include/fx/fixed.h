@@ -420,8 +420,10 @@ FXFixed FXpow(FXFixed x,FXFixed y);
 }                       /* End of "C" linkage for C++   */
 
 #ifndef __IOSTREAM_H
-#include <iostream.h>
+#include <iostream>
 #endif
+
+using std::ostream;
 
 /*--------------------------- Class Definition ----------------------------*/
 

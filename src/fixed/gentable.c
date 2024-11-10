@@ -144,7 +144,7 @@ void dump_atan(FILE *f)
     fprintf(f,"\n\t0x002D0000L, 0x002D0000L};\n");
 }
 
-void main(void)
+int main(void)
 {
     FILE    *f;
 
@@ -158,4 +158,5 @@ void main(void)
     dump_sine(f);
     dump_atan(f);
     fclose(f);
+    return 0;
 }

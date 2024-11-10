@@ -2,6 +2,7 @@
 /* GENERATED FILE -- DO NOT MODIFY */
 
 #define glutBitmapTimesRoman10 XXX
+#include "glutint.h"
 #include "glutbitmap.h"
 #undef glutBitmapTimesRoman10
 

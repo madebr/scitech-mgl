@@ -727,9 +727,9 @@ TCDynStr& TCDynStr::trim(int mode,const char ch,ibool shrink)
 *
 ****************************************************************************/
 {
-    int     i;
-    char    *whitespace;
-    char    p[2];
+    int         i;
+    const char  *whitespace;
+    char        p[2];
 
     CHECK(valid());
     if (ch != 0) {

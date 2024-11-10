@@ -34,7 +34,7 @@
 ****************************************************************************/
 
 #define NO_ICON
-#include "gm\gmdlg.rc"
+#include "gm/gmdlg.rc"
 
 1 ICON "gm.ico"
 

@@ -50,7 +50,7 @@
 
 ; Turn off underscores for globals if disabled for all externals
 
-%ifdef  __NOU__
+%ifidn __OUTPUT_FORMAT__,elf32
 %define __NOU_VAR__
 %endif
 
@@ -165,7 +165,6 @@
 %idefine True       1
 %idefine No         0
 %idefine Yes        1
-%idefine Yes        1
 
 ; TODO: If we wish to port VxD code to NASM, we will potentially
 ;       need special macros in here to handle this!
@@ -181,37 +180,41 @@
         extern __GLOBAL_OFFSET_TABLE_
 %endif
 %endif
-%ifdef __COFF__
-segment .text public class=CODE use32 flat
-segment .data public class=DATA use32 flat
-%else
-%ifdef flatmodel
-segment _TEXT public align=16 class=CODE use32 flat
-segment _DATA public align=4 class=DATA use32 flat
-%else
-segment _TEXT public align=16 class=CODE use16
-segment _DATA public align=4 class=DATA use16
-%endif
-%endif
+;%ifdef __COFF__
+;segment .text public class=CODE use32 flat
+;segment .data public class=DATA use32 flat
+;%else
+;%ifdef flatmodel
+;segment _TEXT public align=16 class=CODE use32 flat
+;segment _DATA public align=4 class=DATA use32 flat
+;%else
+;segment _TEXT public align=16 class=CODE use16
+;segment _DATA public align=4 class=DATA use16
+;%endif
+;%endif
 
 ; Macro to be invoked at the start of all modules to set up segments for
 ; later use. This does nothing for 32-bit code, but for 16-bit code
 ; will set up a far model code segment as well for later use.
 
 %imacro header 1
-%ifndef flatmodel
-segment %1_TEXT public align=16 class=CODE use16
-%endif
+;%ifndef flatmodel
+;segment %1_TEXT public align=16 class=CODE use16
+;%endif
 %endmacro
 
 ; Macro to begin a data segment. Segment attributes were specified in
 ; the header macro that is always required.
 
 %imacro begdataseg 1
-%ifdef __COFF__
-segment .data
+%ifdef __GNUC__
+segment .data public class=DATA use32 flat
 %else
-segment _DATA
+%ifdef flatmodel
+segment _DATA public align=4 class=DATA use32 flat
+%else
+segment _DATA public align=4 class=DATA use16
+%endif
 %endif
 %endmacro
 
@@ -223,13 +226,13 @@ segment _DATA
 ; Macro to begin a code segment
 
 %imacro begcodeseg 1
-%ifdef __COFF__
-segment .text
+%ifdef __GNUC__
+segment .text public class=CODE use32 flat
 %else
 %ifdef flatmodel
-segment _TEXT
+segment _TEXT public align=16 class=CODE use32 flat
 %else
-segment %1_TEXT
+segment %1_TEXT public align=16 class=CODE use16
 %endif
 %endif
 %endmacro
@@ -314,14 +317,15 @@ global _%1
 
 %imacro cglobalfunc 1
 %ifdef __PIC__
-global %1:function
-%else
-%ifdef  __NOU__
+global %1 ;function
+%1:
+%elifdef  __NOU__
 global %1
+%1:
 %else
-global _%1
 %define %1 _%1
-%endif
+global %1
+%1:
 %endif
 %endmacro
 
@@ -344,7 +348,6 @@ global _%1
 %imacro cprocstart 1
 %push cproc
     cglobalfunc %1
-%1:
 %ifdef flatmodel
 %stacksize flat
 %define ret retn
@@ -620,7 +623,7 @@ times %1 dd 0
 ; macros to declare assembler function stubs for function structures
 
 %imacro BEGIN_STUBS_DEF 2
-begdataseg  _STUBS
+section .data
 %ifdef  __NOU_VAR__
 extern %1
 %define STUBS_START %1
@@ -628,8 +631,7 @@ extern %1
 extern _%1
 %define STUBS_START _%1
 %endif
-enddataseg  _STUBS
-begcodeseg  _STUBS
+section .text
 %assign off %2
 %endmacro
 
@@ -681,10 +683,16 @@ endcodeseg  _STUBS
 ; macros to declare assembler import stubs for binary loadable drivers
 
 %imacro BEGIN_IMPORTS_DEF   1
+%ifidn __?BITS?__, 32
 BEGIN_STUBS_DEF %1,4
+%elifidn __?BITS?__, 64
+BEGIN_STUBS_DEF %1,8
+%elifdef DOS4GW
+BEGIN_STUBS_DEF %1,4
+%endif
 %endmacro
 
-ifndef LOCAL_DECLARE_IMP
+%ifndef LOCAL_DECLARE_IMP
 %imacro   DECLARE_IMP   2
 DECLARE_STUB    %1
 %endmacro
@@ -708,7 +716,7 @@ DECLARE_STUB    %1
 %imacro   SKIP_IMP3   1
 SKIP_STUB    %1
 %endmacro
-endif
+%endif
 
 %imacro   END_IMPORTS_DEF 0
 END_STUBS_DEF
@@ -716,3 +724,24 @@ END_STUBS_DEF
 
 %endif
 
+;%imacro PUSH_ESP
+;%ifidn __?BITS?__, 32
+;        push    ebp
+;        mov     ebp,esp
+;        push    ebx
+;%elifidn __?BITS?__, 64
+;        push    rbp
+;        mov     rbp,rsp
+;        push    rbx
+;%endif
+;#endmacro
+;
+;%imacro POP_ESP
+;%ifidn __?BITS?__, 32
+;        pop     ebx
+;        pop     ebp
+;%elifidn __?BITS?__, 64
+;        pop     rbx
+;        pop     rbp
+;%endif
+;#endmacro

@@ -1,0 +1,5 @@
+add_subdirectory(atlantis)
+add_subdirectory(demos)
+add_subdirectory(ideas)
+add_subdirectory(skyfly)
+add_subdirectory(book)

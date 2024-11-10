@@ -52,8 +52,12 @@
 
 #ifdef  __cplusplus
 
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
+
+#if !(defined(_MSC_VER) && _MSC_VER < 14)
+using std::ostream;
+#endif
 
 //---------------------------------------------------------------------------
 // Long Period Zen Timer class. This can be used to time code that takes up

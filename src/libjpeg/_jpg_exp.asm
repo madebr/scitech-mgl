@@ -8,7 +8,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"            ; Memory model macros
 
 BEGIN_IMPORTS_DEF   _JPEG_exports
 DECLARE_IMP __jpeg_std_error,0    ; Handled in C code!
@@ -57,5 +57,3 @@ DECLARE_IMP jpeg_abort,0
 DECLARE_IMP jpeg_destroy,0
 DECLARE_IMP jpeg_resync_to_restart,0
 END_IMPORTS_DEF
-
-        END

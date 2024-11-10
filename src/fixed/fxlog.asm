@@ -40,18 +40,16 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"           ; Memory model macros
 
 header  fxlog                   ; Set up memory model
 
-begdataseg  fxlog
+section .data
 
         cextern FXlog10_table,USHORT
         cextern FXlog2_table,ULONG
 
-enddataseg  fxlog
-
-begcodeseg  fxlog
+section .text
 
 ;----------------------------------------------------------------------------
 ; FXFixed F386_log10(FXFixed f);
@@ -61,7 +59,7 @@ begcodeseg  fxlog
 ;----------------------------------------------------------------------------
 cprocstart  F386_log10
 
-        ARG     f:ULONG
+        %arg    f:ULONG
 
         push    ebp
         mov     ebp,esp
@@ -76,7 +74,7 @@ cprocstart  F386_log10
 ; bit out and use the 7 bits as an index into the table.
 
         or      ebx,ebx
-        jle     @@Invalid       ; Taking log10 of 0 or -ve number
+        jle     .Invalid        ; Taking log10 of 0 or -ve number
 
 ; Search for the index of the first 1 bit in the number (start of
 ; the mantissa. Note that we are only working with positive numbers
@@ -116,26 +114,26 @@ cprocstart  F386_log10
 ; result.
 
         or      ecx,ecx
-        js      @@Neg
+        js      .Neg
 
         mov     ebx,ecx
         shl     ebx,2           ; ebx = index into powers of 2 table
         add     eax,[FXlog2_table+ebx]
-        jmp     @@Done
+        jmp     .Done
 
-@@Neg:
+.Neg:
         neg     ecx
         mov     ebx,ecx
         shl     ebx,2           ; ebx = index into powers of 2 table
         sub     eax,[FXlog2_table+ebx]
 
-@@Done: pop     ebx             ; Restore EBX
+.Done:  pop     ebx             ; Restore EBX
         pop     ebp
         ret
 
-@@Invalid:
+.Invalid:
         xor     eax,eax         ; Invalid - return 0
-        jmp     @@Done
+        jmp     .Done
 
 cprocend
 
@@ -147,7 +145,7 @@ cprocend
 ;----------------------------------------------------------------------------
 cprocstart  F386_log
 
-        ARG     f:ULONG
+        %arg    f:ULONG
 
         push    ebp
         mov     ebp,esp
@@ -164,7 +162,3 @@ cprocstart  F386_log
         ret
 
 cprocend
-
-endcodeseg  fxlog
-
-        END                     ; End of module

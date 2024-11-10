@@ -36,7 +36,7 @@
 ;*
 ;****************************************************************************
 
-include "scitech.mac"           ; Memory model macros
+%include "scitech.mac"          ; Memory model macros
 
 BEGIN_IMPORTS_DEF   _GLS_glFuncs
 DECLARE_STDCALL glAccum,8

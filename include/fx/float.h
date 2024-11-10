@@ -131,7 +131,7 @@ extern "C" {            /* Use "C" linkage when in C++ mode */
 
 #ifdef  FPU387
 
-extern real FXpi_180;
+extern const real FXpi_180;
 
 #if defined(__WATCOMC__)
 
